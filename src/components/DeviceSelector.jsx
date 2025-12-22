@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Radio, X, CheckCheck } from 'lucide-react';
+import { Search, Radio, X, CheckCheck, Camera } from 'lucide-react';
+import BarcodeScanner from './BarcodeScanner';
 
 export default function DeviceSelector({ devices, selectedDevices, onSelectionChange, isLoading }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterGroup, setFilterGroup] = useState('all');
+  const [showScanner, setShowScanner] = useState(false);
 
   const filteredDevices = devices.filter(device => {
     const matchesSearch = device.serial_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,14 +74,24 @@ export default function DeviceSelector({ devices, selectedDevices, onSelectionCh
         ))}
       </div>
 
-      <div className="relative">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-        <Input
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="חפש לפי מספר סידורי..."
-          className="h-12 pr-10 rounded-xl"
-        />
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="חפש לפי מספר סידורי..."
+            className="h-12 pr-10 rounded-xl"
+          />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 px-4 rounded-xl"
+          onClick={() => setShowScanner(true)}
+        >
+          <Camera className="w-5 h-5" />
+        </Button>
       </div>
 
       {selectedDevices.length > 0 && (
@@ -151,6 +163,19 @@ export default function DeviceSelector({ devices, selectedDevices, onSelectionCh
           </div>
         )}
       </ScrollArea>
+
+      {showScanner && (
+        <BarcodeScanner
+          onScan={(code) => {
+            const device = devices.find(d => d.serial_number === code);
+            if (device && !selectedDevices.includes(code)) {
+              onSelectionChange([...selectedDevices, code]);
+            }
+            setShowScanner(false);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </div>
   );
 }

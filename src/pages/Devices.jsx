@@ -23,9 +23,11 @@ import {
   Shield,
   AlertTriangle,
   Wifi,
-  Loader2
+  Loader2,
+  Camera
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import BarcodeScanner from '../components/BarcodeScanner';
 
 const GROUP_OPTIONS = [
   { value: '713', label: '713' },
@@ -42,6 +44,7 @@ export default function Devices() {
   const [filterGroup, setFilterGroup] = useState('all');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState(null);
+  const [showScanner, setShowScanner] = useState(false);
   const [newDevice, setNewDevice] = useState({
     serial_number: '',
     device_group: '',
@@ -165,12 +168,22 @@ export default function Devices() {
                   <div className="space-y-4 mt-4">
                     <div className="space-y-2">
                       <Label>מספר סידורי (צ')</Label>
-                      <Input
-                        value={newDevice.serial_number}
-                        onChange={(e) => setNewDevice({ ...newDevice, serial_number: e.target.value })}
-                        placeholder="הזן מספר סידורי"
-                        className="h-12 rounded-xl"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          value={newDevice.serial_number}
+                          onChange={(e) => setNewDevice({ ...newDevice, serial_number: e.target.value })}
+                          placeholder="הזן מספר סידורי"
+                          className="h-12 rounded-xl flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-12 px-4 rounded-xl"
+                          onClick={() => setShowScanner(true)}
+                        >
+                          <Camera className="w-5 h-5" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label>קבוצת מכשיר</Label>
@@ -536,6 +549,17 @@ export default function Devices() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Barcode Scanner */}
+        {showScanner && (
+          <BarcodeScanner
+            onScan={(code) => {
+              setNewDevice({ ...newDevice, serial_number: code });
+              setShowScanner(false);
+            }}
+            onClose={() => setShowScanner(false)}
+          />
+        )}
       </div>
     </div>
   );
