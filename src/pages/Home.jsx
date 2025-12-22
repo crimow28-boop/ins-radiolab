@@ -146,70 +146,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}>
-
-            <Link to={createPageUrl('NewInspection')}>
-              <Card className="bg-gradient-to-br from-blue-600 to-blue-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <ClipboardList className="w-10 h-10 mb-4 opacity-90" />
-                      <h3 className="text-xl font-bold mb-1">בדיקה חדשה</h3>
-                      <p className="text-blue-100 text-sm">התחל בדיקת מכשיר</p>
-                    </div>
-                    <ArrowLeft className="w-6 h-6 opacity-70" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}>
-
-            <Link to={createPageUrl('Devices')}>
-              <Card className="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Package className="w-10 h-10 mb-4 opacity-90" />
-                      <h3 className="text-xl font-bold mb-1">מלאי מכשירים</h3>
-                      <p className="text-emerald-100 text-sm">ניהול והוספת מכשירים</p>
-                    </div>
-                    <ArrowLeft className="w-6 h-6 opacity-70" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}>
-
-            <Link to={createPageUrl('InspectionHistory')}>
-              <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <History className="w-10 h-10 mb-4 opacity-90" />
-                      <h3 className="text-xl font-bold mb-1">היסטוריית בדיקות</h3>
-                      <p className="text-purple-100 text-sm">צפייה בבדיקות קודמות</p>
-                    </div>
-                    <ArrowLeft className="w-6 h-6 opacity-70" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          </motion.div>
-        </div>
+        {/* Navigation moved to bottom bar */}
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="bg-white border-0 shadow-lg lg:col-span-2">
