@@ -141,15 +141,6 @@ export default function Devices() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="bg-white border-0 shadow-lg mb-6">
           <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-
-          </div>
-        </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 py-6">
-        <Card className="bg-white border-0 shadow-lg mb-6">
-          <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center">
               <div className="relative flex-1">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
