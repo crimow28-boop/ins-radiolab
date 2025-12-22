@@ -14,21 +14,16 @@ import { Button } from '@/components/ui/button';
 
 export default function Layout({ children, currentPageName }) {
   const navItems = [
-    { name: 'Home', label: 'בית', icon: Home },
     { name: 'NewInspection', label: 'בדיקה חדשה', icon: ClipboardList },
-    { name: 'Devices', label: 'מכשירים', icon: Package },
+    { name: 'Devices', label: 'מלאי', icon: Package },
     { name: 'InspectionHistory', label: 'היסטוריה', icon: History },
   ];
 
-  // Hide layout on splash screen
-  if (currentPageName === 'Home') {
-    return <>{children}</>;
-  }
-
   return (
     <div className="min-h-screen bg-slate-50" dir="rtl">
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 px-6 pb-safe pt-2">
+      {/* Mobile Bottom Navigation - Always Visible */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 shadow-2xl">
+        <div className="flex items-center justify-around px-4 py-3 max-w-md mx-auto">
         <div className="flex items-center justify-between">
           {navItems.map((item) => {
             const isActive = currentPageName === item.name;
@@ -104,7 +99,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <div className="lg:pr-64">
-        <main className="pb-24 lg:pb-0">
+        <main className="pb-24">
           {children}
         </main>
       </div>
