@@ -134,8 +134,15 @@ export default function Devices() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <Card className="bg-white border-0 shadow-lg mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-emerald-600 hover:bg-emerald-700">
                   <Plus className="w-4 h-4 ml-2" />
