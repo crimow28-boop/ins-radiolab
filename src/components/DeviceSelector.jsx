@@ -167,6 +167,7 @@ export default function DeviceSelector({ devices, selectedDevices, onSelectionCh
       {showScanner && (
         <BarcodeScanner
           onScan={(code) => {
+            setSearchTerm(code);
             const device = devices.find(d => d.serial_number === code);
             if (device && !selectedDevices.includes(code)) {
               onSelectionChange([...selectedDevices, code]);
