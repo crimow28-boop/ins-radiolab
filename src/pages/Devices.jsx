@@ -229,6 +229,77 @@ export default function Devices() {
                   className="h-12 pr-10 rounded-xl"
                 />
               </div>
+              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 h-12 rounded-xl">
+                    <Plus className="w-4 h-4 ml-2" />
+                    הוסף מכשיר
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md" dir="rtl">
+                  <DialogHeader>
+                    <DialogTitle>הוספת מכשיר חדש</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label>מספר סידורי (צ')</Label>
+                      <Input
+                        value={newDevice.serial_number}
+                        onChange={(e) => setNewDevice({ ...newDevice, serial_number: e.target.value })}
+                        placeholder="הזן מספר סידורי"
+                        className="h-12 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>קבוצת מכשיר</Label>
+                      <Select
+                        value={newDevice.device_group}
+                        onValueChange={(v) => setNewDevice({ ...newDevice, device_group: v })}
+                      >
+                        <SelectTrigger className="h-12 rounded-xl">
+                          <SelectValue placeholder="בחר קבוצה" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {GROUP_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>שם מכשיר (אופציונלי)</Label>
+                      <Input
+                        value={newDevice.device_name}
+                        onChange={(e) => setNewDevice({ ...newDevice, device_name: e.target.value })}
+                        placeholder="שם מכשיר"
+                        className="h-12 rounded-xl"
+                      />
+                    </div>
+                    {(newDevice.device_group === 'hargol') && (
+                      <div className="space-y-2">
+                        <Label>כתובת IP</Label>
+                        <Input
+                          value={newDevice.ip_address}
+                          onChange={(e) => setNewDevice({ ...newDevice, ip_address: e.target.value })}
+                          placeholder="192.168.X.X"
+                          className="h-12 rounded-xl"
+                        />
+                      </div>
+                    )}
+                    <Button
+                      onClick={() => createMutation.mutate(newDevice)}
+                      disabled={!newDevice.serial_number || !newDevice.device_group || createMutation.isPending}
+                      className="w-full h-12 bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      {createMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'הוסף מכשיר'
+                      )}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <div className="flex gap-2 flex-wrap">
                 <Button
                   variant={filterGroup === 'all' ? 'default' : 'outline'}
