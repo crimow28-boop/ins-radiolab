@@ -44,42 +44,22 @@ export default function CavadSection({ data, onChange }) {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-slate-700">סוג בדיקה</Label>
-        <Select
-          value={data.cavad_type || ''}
-          onValueChange={(v) => onChange({ ...data, cavad_type: v })}
-        >
-          <SelectTrigger className="h-12 rounded-xl text-right">
-            <SelectValue placeholder="בחר סוג בדיקה" />
-          </SelectTrigger>
-          <SelectContent className="text-right">
-            <SelectItem value="710" className="text-right">710</SelectItem>
-            <SelectItem value="710_mach5091" className="text-right">710+מח-5091</SelectItem>
-            <SelectItem value="711" className="text-right">711</SelectItem>
-            <SelectItem value="711_mach5091" className="text-right">711+מח-5091</SelectItem>
-            <SelectItem value="713" className="text-right">713</SelectItem>
-            <SelectItem value="713_mach5091" className="text-right">713+מח-5091</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
         <Label className="text-slate-700">סטטוס בדיקה</Label>
         <Select
           value={data.cavad_status || ''}
           onValueChange={handleStatusChange}
         >
-          <SelectTrigger className="h-12 rounded-xl text-right">
+          <SelectTrigger className="h-12 rounded-xl">
             <SelectValue placeholder="בחר סטטוס" />
           </SelectTrigger>
-          <SelectContent className="text-right">
-            <SelectItem value="passed" className="text-right">
+          <SelectContent>
+            <SelectItem value="passed">
               <span className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-500" />
                 עבר
               </span>
             </SelectItem>
-            <SelectItem value="failed" className="text-right">
+            <SelectItem value="failed">
               <span className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-500" />
                 נכשל
