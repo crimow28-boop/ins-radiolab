@@ -105,150 +105,190 @@ export default function DeviceHistory() {
           <>
             {/* Device Info */}
             {device && (
-              <Card className="bg-white border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center">
-                      <Radio className="w-8 h-8 text-white" />
+              <Card className="bg-white border-0 shadow-lg overflow-hidden">
+                <div className="h-2 bg-gradient-to-r from-blue-500 to-cyan-400" />
+                <CardContent className="p-8">
+                  <div className="flex flex-col md:flex-row items-start gap-6">
+                    <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center border border-slate-100 shadow-sm">
+                      <Radio className="w-10 h-10 text-blue-600" />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h2 className="text-xl font-bold text-slate-800">{device.serial_number}</h2>
-                        <Badge variant="outline">
-                          {groupLabels[device.device_group] || device.device_group}
-                        </Badge>
-                        {device.encryption_status === 'encrypted' && (
-                          <Badge className="bg-green-100 text-green-800">
-                            <Shield className="w-3 h-3 ml-1" />
-                            מוצפן
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <h2 className="text-3xl font-bold text-slate-900 font-mono tracking-tight">{device.serial_number}</h2>
+                          <Badge variant="secondary" className="bg-slate-100 text-slate-600 hover:bg-slate-200">
+                            {groupLabels[device.device_group] || device.device_group}
                           </Badge>
+                        </div>
+                        {device.device_name && (
+                          <p className="text-lg text-slate-600">{device.device_name}</p>
                         )}
                       </div>
-                      {device.device_name && (
-                        <p className="text-slate-600 mb-2">{device.device_name}</p>
-                      )}
-                      <div className="flex gap-6 text-sm text-slate-500">
-                        <span>בדיקות: {device.total_inspections || 0}</span>
-                        <span>תקלות: {device.total_faults || faults.length}</span>
-                        {device.last_inspection_date && (
-                          <span>בדיקה אחרונה: {format(new Date(device.last_inspection_date), 'dd/MM/yyyy')}</span>
-                        )}
+                      
+                      <div className="flex flex-wrap gap-4">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                          <Shield className={`w-4 h-4 ${device.encryption_status === 'encrypted' ? 'text-emerald-500' : 'text-slate-400'}`} />
+                          <span className="text-sm font-medium text-slate-700">
+                            {device.encryption_status === 'encrypted' ? 'מוצפן' : 'לא מוצפן'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                          <ClipboardList className="w-4 h-4 text-blue-500" />
+                          <span className="text-sm font-medium text-slate-700">
+                            {device.total_inspections || 0} בדיקות
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                          <AlertTriangle className="w-4 h-4 text-amber-500" />
+                          <span className="text-sm font-medium text-slate-700">
+                            {device.total_faults || faults.length} תקלות
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    {device.last_inspection_date && (
+                      <div className="text-left px-4 py-2 bg-green-50 rounded-xl border border-green-100">
+                        <p className="text-xs text-green-600 font-medium uppercase tracking-wider mb-1">בדיקה אחרונה</p>
+                        <p className="text-lg font-bold text-green-700">
+                          {format(new Date(device.last_inspection_date), 'dd/MM/yyyy')}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Faults */}
-            {faults.length > 0 && (
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Faults */}
               <Card className="bg-white border-0 shadow-lg">
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
                       <AlertTriangle className="w-5 h-5 text-amber-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-800">תקלות ({faults.length})</h3>
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800">היסטוריית תקלות</h3>
+                      <p className="text-sm text-slate-500">{faults.length} תקלות רשומות</p>
+                    </div>
                   </div>
-                  <div className="space-y-3">
-                    {faults.map((fault, index) => (
-                      <motion.div
-                        key={fault.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className={`p-4 rounded-xl ${
-                          fault.resolved ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-medium text-slate-800">{fault.fault_description}</p>
-                            <p className="text-sm text-slate-500 mt-1">
-                              {format(new Date(fault.fault_date), 'dd/MM/yyyy HH:mm')}
-                            </p>
+                  
+                  {faults.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                      <p>אין תקלות רשומות</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {faults.map((fault, index) => (
+                        <motion.div
+                          key={fault.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className={`p-4 rounded-xl border-l-4 ${
+                            fault.resolved 
+                              ? 'bg-slate-50 border-l-emerald-500' 
+                              : 'bg-amber-50 border-l-amber-500'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <span className={`text-xs font-bold uppercase tracking-wider ${
+                              fault.resolved ? 'text-emerald-600' : 'text-amber-600'
+                            }`}>
+                              {fault.resolved ? 'טופל' : 'פתוח'}
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              {format(new Date(fault.fault_date), 'dd/MM/yyyy')}
+                            </span>
                           </div>
-                          <Badge className={fault.resolved ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}>
-                            {fault.resolved ? 'טופל' : 'פתוח'}
-                          </Badge>
-                        </div>
-                        {fault.resolution_notes && (
-                          <p className="mt-2 text-sm text-green-700 bg-green-100 p-2 rounded">
-                            {fault.resolution_notes}
-                          </p>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
+                          <p className="font-medium text-slate-800 mb-2">{fault.fault_description}</p>
+                          {fault.resolution_notes && (
+                            <div className="text-sm text-slate-600 bg-white/50 p-2 rounded-lg mt-2">
+                              <span className="font-semibold">טיפול:</span> {fault.resolution_notes}
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            )}
 
-            {/* Inspections */}
-            <Card className="bg-white border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <ClipboardList className="w-5 h-5 text-purple-600" />
+              {/* Inspections */}
+              <Card className="bg-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                      <ClipboardList className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800">היסטוריית בדיקות</h3>
+                      <p className="text-sm text-slate-500">{deviceInspections.length} בדיקות בוצעו</p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-800">בדיקות ({deviceInspections.length})</h3>
-                </div>
 
-                {deviceInspections.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500">
-                    <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>אין בדיקות למכשיר זה</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {deviceInspections.map((inspection, index) => (
-                      <motion.div
-                        key={inspection.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="p-4 bg-slate-50 rounded-xl"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="font-bold text-blue-600">
-                                #{inspection.inspection_number}
+                  {deviceInspections.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                      <p>טרם בוצעו בדיקות</p>
+                    </div>
+                  ) : (
+                    <div className="relative border-r border-slate-200 mr-4 space-y-8 py-2">
+                      {deviceInspections.map((inspection, index) => (
+                        <motion.div
+                          key={inspection.id}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="relative pr-8"
+                        >
+                          {/* Timeline dot */}
+                          <div className={`absolute right-[-5px] top-0 w-2.5 h-2.5 rounded-full border-2 border-white ring-1 ${
+                            inspection.cavad_status === 'passed' ? 'bg-emerald-500 ring-emerald-200' : 
+                            inspection.cavad_status === 'failed' ? 'bg-red-500 ring-red-200' : 'bg-slate-300 ring-slate-200'
+                          }`} />
+                          
+                          <div className="bg-slate-50 rounded-xl p-4 hover:bg-blue-50 transition-colors group cursor-pointer border border-slate-100">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="font-bold text-slate-700 text-sm">#{inspection.inspection_number}</span>
+                              <span className="text-xs text-slate-400">
+                                {format(new Date(inspection.created_date), 'dd/MM/yyyy')}
                               </span>
-                              {inspection.cavad_status === 'passed' ? (
-                                <Badge className="bg-green-100 text-green-800">
-                                  <CheckCircle className="w-3 h-3 ml-1" />
-                                  עבר
-                                </Badge>
-                              ) : inspection.cavad_status === 'failed' ? (
-                                <Badge className="bg-red-100 text-red-800">
-                                  נכשל
-                                </Badge>
-                              ) : null}
                             </div>
-                            <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                              <span className="flex items-center gap-1">
-                                <User className="w-4 h-4" />
-                                {inspection.soldier_name}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
-                                {format(new Date(inspection.created_date), 'dd/MM/yyyy HH:mm')}
-                              </span>
+                            
+                            <div className="flex items-center gap-2 mb-3">
+                              <User className="w-3 h-3 text-slate-400" />
+                              <span className="text-sm text-slate-600">{inspection.soldier_name}</span>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              {inspection.cavad_status === 'passed' && (
+                                <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">CAVAD תקין</span>
+                              )}
+                              {inspection.cavad_status === 'failed' && (
+                                <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">CAVAD נכשל</span>
+                              )}
+                              {inspection.fault_description && inspection.fault_description !== 'אין' && (
+                                <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">תקלה</span>
+                              )}
+                            </div>
+                            
+                            <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 left-2">
+                              <Link to={createPageUrl('InspectionHistory')}>
+                                <Button size="icon" variant="ghost" className="h-6 w-6">
+                                  <ArrowRight className="w-3 h-3" />
+                                </Button>
+                              </Link>
                             </div>
                           </div>
-                          <Link to={createPageUrl('InspectionHistory')}>
-                            <Button variant="ghost" size="sm">
-                              צפה בפרטים
-                            </Button>
-                          </Link>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </>
         )}
       </div>

@@ -86,7 +86,7 @@ export default function InspectionHistory() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="חפש לפי שם חייל, מספר בדיקה או מספר סידורי..."
-                className="h-12 pr-10 rounded-xl"
+                className="h-12 pr-10 rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 transition-all"
               />
             </div>
           </CardContent>
@@ -112,82 +112,76 @@ export default function InspectionHistory() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.02 }}
               >
-                <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                          <span className="text-blue-600 font-bold">#{inspection.inspection_number}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-slate-800">
-                              בדיקה #{inspection.inspection_number}
-                            </h3>
-                            <Badge variant="outline">
-                              {profileLabels[inspection.profile] || inspection.profile}
-                            </Badge>
-                          </div>
-                          <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                            <span className="flex items-center gap-1">
-                              <User className="w-4 h-4" />
-                              {inspection.soldier_name}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {format(new Date(inspection.created_date), 'dd/MM/yyyy HH:mm')}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Radio className="w-4 h-4" />
-                              {(inspection.device_serial_numbers || []).length} מכשירים
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            {(inspection.device_serial_numbers || []).slice(0, 3).map(serial => (
-                              <Badge key={serial} className="bg-slate-100 text-slate-700">
-                                {serial}
-                              </Badge>
-                            ))}
-                            {(inspection.device_serial_numbers || []).length > 3 && (
-                              <Badge className="bg-slate-100 text-slate-700">
-                                +{(inspection.device_serial_numbers || []).length - 3}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
+                <div className="group bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer" onClick={() => setSelectedInspection(inspection)}>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700 font-bold border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                        #{inspection.inspection_number}
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex gap-2">
-                          {inspection.cavad_status === 'passed' ? (
-                            <Badge className="bg-green-100 text-green-800">
-                              <CheckCircle className="w-3 h-3 ml-1" />
-                              CAVAD עבר
-                            </Badge>
-                          ) : inspection.cavad_status === 'failed' ? (
-                            <Badge className="bg-red-100 text-red-800">
-                              <XCircle className="w-3 h-3 ml-1" />
-                              CAVAD נכשל
-                            </Badge>
-                          ) : null}
-                          {inspection.fault_description && inspection.fault_description !== 'אין' && (
-                            <Badge className="bg-amber-100 text-amber-800">
-                              <AlertTriangle className="w-3 h-3 ml-1" />
-                              תקלה
-                            </Badge>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-3 mb-1">
+                          <h3 className="font-semibold text-slate-900">
+                            {inspection.soldier_name}
+                          </h3>
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
+                            {profileLabels[inspection.profile] || inspection.profile}
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-y-1 gap-x-4 text-sm text-slate-500">
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {format(new Date(inspection.created_date), 'dd/MM/yyyy HH:mm')}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Radio className="w-3.5 h-3.5" />
+                            {(inspection.device_serial_numbers || []).length} מכשירים
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {(inspection.device_serial_numbers || []).slice(0, 4).map(serial => (
+                            <span key={serial} className="px-2 py-0.5 bg-slate-50 text-slate-600 text-xs rounded-md border border-slate-100 font-mono">
+                              {serial}
+                            </span>
+                          ))}
+                          {(inspection.device_serial_numbers || []).length > 4 && (
+                            <span className="px-2 py-0.5 bg-slate-50 text-slate-500 text-xs rounded-md border border-slate-100">
+                              +{(inspection.device_serial_numbers || []).length - 4}
+                            </span>
                           )}
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedInspection(inspection)}
-                        >
-                          <Eye className="w-4 h-4 ml-1" />
-                          פרטים
-                        </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <div className="flex flex-row md:flex-col items-center md:items-end gap-2 pl-2">
+                      <div className="flex gap-2">
+                        {inspection.cavad_status === 'passed' ? (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-100">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            CAVAD
+                          </div>
+                        ) : inspection.cavad_status === 'failed' ? (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 text-xs font-medium border border-red-100">
+                            <XCircle className="w-3.5 h-3.5" />
+                            CAVAD
+                          </div>
+                        ) : null}
+                        
+                        {inspection.fault_description && inspection.fault_description !== 'אין' && (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-100">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            תקלה
+                          </div>
+                        )}
+                      </div>
+                      <Button variant="ghost" size="sm" className="text-slate-400 hover:text-blue-600">
+                        <Eye className="w-4 h-4 ml-1" />
+                        פרטים מלאים
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>

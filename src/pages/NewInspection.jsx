@@ -128,7 +128,7 @@ export default function NewInspection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      navigate(createPageUrl('InspectionHistory'));
+      navigate(createPageUrl('Home')); // Better flow: Go to home dashboard
     },
   });
 
