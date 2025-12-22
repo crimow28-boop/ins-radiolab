@@ -22,24 +22,25 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-50" dir="rtl">
       {/* Mobile Bottom Navigation - Always Visible */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 shadow-2xl">
-        <div className="flex items-center justify-around px-4 py-3 max-w-md mx-auto">
-        <div className="flex items-center justify-between">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 shadow-2xl">
+        <div className="flex items-center justify-around px-4 py-3">
           {navItems.map((item) => {
             const isActive = currentPageName === item.name;
             return (
               <Link 
                 key={item.name} 
                 to={createPageUrl(item.name)}
-                className="flex flex-col items-center justify-center w-full py-2"
+                className="flex flex-col items-center justify-center flex-1"
               >
-                <div className={`p-1.5 rounded-full transition-all ${
-                  isActive ? 'bg-blue-100 text-blue-600' : 'text-slate-400'
+                <div className={`p-2.5 rounded-2xl transition-all ${
+                  isActive ? 'bg-blue-600 shadow-lg' : ''
                 }`}>
-                  <item.icon className="w-6 h-6" />
+                  <item.icon className={`w-6 h-6 ${
+                    isActive ? 'text-white' : 'text-slate-400'
+                  }`} />
                 </div>
-                <span className={`text-[10px] mt-1 font-medium ${
-                  isActive ? 'text-blue-600' : 'text-slate-400'
+                <span className={`text-xs mt-1.5 font-semibold ${
+                  isActive ? 'text-blue-600' : 'text-slate-500'
                 }`}>
                   {item.label}
                 </span>
