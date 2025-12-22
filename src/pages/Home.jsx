@@ -5,17 +5,17 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Radio, 
-  ClipboardList, 
-  History, 
-  Package, 
+import {
+  Radio,
+  ClipboardList,
+  History,
+  Package,
   AlertTriangle,
   TrendingUp,
   CheckCircle,
   ArrowLeft,
-  Activity
-} from 'lucide-react';
+  Activity } from
+'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { subDays, format } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -30,38 +30,38 @@ export default function Home() {
 
   const { data: devices = [] } = useQuery({
     queryKey: ['devices'],
-    queryFn: () => base44.entities.Device.list(),
+    queryFn: () => base44.entities.Device.list()
   });
 
   const { data: inspections = [] } = useQuery({
     queryKey: ['inspections'],
-    queryFn: () => base44.entities.Inspection.list('-created_date', 100),
+    queryFn: () => base44.entities.Inspection.list('-created_date', 100)
   });
 
   const { data: faults = [] } = useQuery({
     queryKey: ['faults'],
-    queryFn: () => base44.entities.FaultHistory.filter({ resolved: false }),
+    queryFn: () => base44.entities.FaultHistory.filter({ resolved: false })
   });
 
   const stats = {
     totalDevices: devices.length,
     totalInspections: inspections.length,
     openFaults: faults.length,
-    encryptedDevices: devices.filter(d => d.encryption_status === 'encrypted').length,
+    encryptedDevices: devices.filter((d) => d.encryption_status === 'encrypted').length
   };
 
   const groupCounts = {
-    '713': devices.filter(d => d.device_group === '713').length,
-    '710': devices.filter(d => d.device_group === '710').length,
-    '711': devices.filter(d => d.device_group === '711').length,
+    '713': devices.filter((d) => d.device_group === '713').length,
+    '710': devices.filter((d) => d.device_group === '710').length,
+    '711': devices.filter((d) => d.device_group === '711').length
   };
 
   // Prepare chart data - last 7 days
   const chartData = Array.from({ length: 7 }).map((_, i) => {
     const date = subDays(new Date(), 6 - i);
     const dateStr = format(date, 'yyyy-MM-dd');
-    const count = inspections.filter(insp => 
-      insp.created_date.startsWith(dateStr)
+    const count = inspections.filter((insp) =>
+    insp.created_date.startsWith(dateStr)
     ).length;
     return {
       name: format(date, 'dd/MM'),
@@ -76,13 +76,13 @@ export default function Home() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="text-center"
-        >
+          className="text-center">
+
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
+            transition={{ delay: 0.3, duration: 0.5 }}>
+
             <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-2xl">
               <Radio className="w-12 h-12 text-white" />
             </div>
@@ -94,13 +94,13 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 0.5 }}
-            className="mt-8"
-          >
+            className="mt-8">
+
             <div className="w-8 h-8 border-t-2 border-blue-400 rounded-full animate-spin mx-auto"></div>
           </motion.div>
         </motion.div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -112,7 +112,7 @@ export default function Home() {
               <Radio className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">RadioLab Inspection System</h1>
+              <h1 className="text-3xl font-bold">INS - RadioLab</h1>
               <p className="text-blue-200">מערכת בדיקות מכשירי קשר</p>
             </div>
           </div>
@@ -122,17 +122,17 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'סה"כ מכשירים', value: stats.totalDevices, icon: Package, color: 'blue' },
-            { label: 'בדיקות שבוצעו', value: stats.totalInspections, icon: CheckCircle, color: 'green' },
-            { label: 'תקלות פתוחות', value: stats.openFaults, icon: AlertTriangle, color: 'amber' },
-            { label: 'מכשירים מוצפנים', value: stats.encryptedDevices, icon: TrendingUp, color: 'purple' },
-          ].map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-            >
+          { label: 'סה"כ מכשירים', value: stats.totalDevices, icon: Package, color: 'blue' },
+          { label: 'בדיקות שבוצעו', value: stats.totalInspections, icon: CheckCircle, color: 'green' },
+          { label: 'תקלות פתוחות', value: stats.openFaults, icon: AlertTriangle, color: 'amber' },
+          { label: 'מכשירים מוצפנים', value: stats.encryptedDevices, icon: TrendingUp, color: 'purple' }].
+          map((stat, i) =>
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}>
+
               <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl">
                 <CardContent className="p-5">
                   <div className={`w-10 h-10 bg-${stat.color}-100 rounded-xl flex items-center justify-center mb-3`}>
@@ -143,15 +143,15 @@ export default function Home() {
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+            transition={{ delay: 0.2 }}>
+
             <Link to={createPageUrl('NewInspection')}>
               <Card className="bg-gradient-to-br from-blue-600 to-blue-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer">
                 <CardContent className="p-6">
@@ -171,8 +171,8 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
+            transition={{ delay: 0.3 }}>
+
             <Link to={createPageUrl('Devices')}>
               <Card className="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer">
                 <CardContent className="p-6">
@@ -192,8 +192,8 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
+            transition={{ delay: 0.4 }}>
+
             <Link to={createPageUrl('InspectionHistory')}>
               <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer">
                 <CardContent className="p-6">
@@ -225,24 +225,24 @@ export default function Home() {
                   <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} />
                     <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="count" 
-                      stroke="#3b82f6" 
-                      fillOpacity={1} 
-                      fill="url(#colorCount)" 
-                      strokeWidth={3}
-                    />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+
+                    <Area
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#3b82f6"
+                      fillOpacity={1}
+                      fill="url(#colorCount)"
+                      strokeWidth={3} />
+
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -253,20 +253,20 @@ export default function Home() {
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold text-slate-800 mb-4">התפלגות מכשירים</h3>
               <div className="space-y-6">
-                {Object.entries(groupCounts).map(([group, count]) => (
-                  <div key={group}>
+                {Object.entries(groupCounts).map(([group, count]) =>
+                <div key={group}>
                     <div className="flex justify-between text-sm mb-2">
                       <span className="font-medium text-slate-700">קבוצה {group}</span>
                       <span className="text-slate-500">{count} מכשירים</span>
                     </div>
                     <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-1000"
-                        style={{ width: `${(count / stats.totalDevices) * 100 || 0}%` }}
-                      />
+                      <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-1000"
+                      style={{ width: `${count / stats.totalDevices * 100 || 0}%` }} />
+
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -284,8 +284,8 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {inspections.slice(0, 6).map(inspection => (
-                <div key={inspection.id} className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-blue-200 transition-colors">
+              {inspections.slice(0, 6).map((inspection) =>
+              <div key={inspection.id} className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-blue-200 transition-colors">
                   <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-600 font-bold border border-slate-100">
                     #{inspection.inspection_number}
                   </div>
@@ -300,17 +300,17 @@ export default function Home() {
                     {format(new Date(inspection.created_date), 'dd/MM')}
                   </span>
                 </div>
-              ))}
-              {inspections.length === 0 && (
-                <div className="col-span-full text-center py-12 text-slate-500">
+              )}
+              {inspections.length === 0 &&
+              <div className="col-span-full text-center py-12 text-slate-500">
                   <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-20" />
                   <p>אין בדיקות במערכת</p>
                 </div>
-              )}
+              }
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }
