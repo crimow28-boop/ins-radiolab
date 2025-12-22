@@ -13,8 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 
 export default function Layout({ children, currentPageName }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-
   const navItems = [
     { name: 'Home', label: 'בית', icon: Home },
     { name: 'NewInspection', label: 'בדיקה חדשה', icon: ClipboardList },
@@ -29,45 +27,31 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="min-h-screen bg-slate-50" dir="rtl">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-white border-b border-slate-200 fixed top-0 left-0 right-0 z-50">
-        <div className="flex items-center justify-between px-4 py-3">
-          <Link to={createPageUrl('Home')} className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center">
-              <Radio className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-slate-800">RadioLab</span>
-          </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="bg-white border-t border-slate-100 py-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 px-6 pb-safe pt-2">
+        <div className="flex items-center justify-between">
+          {navItems.map((item) => {
+            const isActive = currentPageName === item.name;
+            return (
+              <Link 
+                key={item.name} 
                 to={createPageUrl(item.name)}
-                onClick={() => setMobileMenuOpen(false)}
+                className="flex flex-col items-center justify-center w-full py-2"
               >
-                <div className={`flex items-center gap-3 px-4 py-3 ${
-                  currentPageName === item.name 
-                    ? 'bg-blue-50 text-blue-600' 
-                    : 'text-slate-600 hover:bg-slate-50'
+                <div className={`p-1.5 rounded-full transition-all ${
+                  isActive ? 'bg-blue-100 text-blue-600' : 'text-slate-400'
                 }`}>
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <item.icon className="w-6 h-6" />
                 </div>
+                <span className={`text-[10px] mt-1 font-medium ${
+                  isActive ? 'text-blue-600' : 'text-slate-400'
+                }`}>
+                  {item.label}
+                </span>
               </Link>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
       </div>
 
       {/* Desktop Sidebar */}
@@ -120,7 +104,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <div className="lg:pr-64">
-        <main className="lg:pt-0 pt-14">
+        <main className="pb-24 lg:pb-0">
           {children}
         </main>
       </div>
