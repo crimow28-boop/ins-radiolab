@@ -1,0 +1,252 @@
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { 
+  Radio, 
+  ClipboardList, 
+  History, 
+  Package, 
+  AlertTriangle,
+  TrendingUp,
+  CheckCircle,
+  ArrowLeft
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+
+export default function Home() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const { data: devices = [] } = useQuery({
+    queryKey: ['devices'],
+    queryFn: () => base44.entities.Device.list(),
+  });
+
+  const { data: inspections = [] } = useQuery({
+    queryKey: ['inspections'],
+    queryFn: () => base44.entities.Inspection.list('-created_date', 100),
+  });
+
+  const { data: faults = [] } = useQuery({
+    queryKey: ['faults'],
+    queryFn: () => base44.entities.FaultHistory.filter({ resolved: false }),
+  });
+
+  const stats = {
+    totalDevices: devices.length,
+    totalInspections: inspections.length,
+    openFaults: faults.length,
+    encryptedDevices: devices.filter(d => d.encryption_status === 'encrypted').length,
+  };
+
+  const groupCounts = {
+    '713': devices.filter(d => d.device_group === '713').length,
+    '710': devices.filter(d => d.device_group === '710').length,
+    '711': devices.filter(d => d.device_group === '711').length,
+  };
+
+  if (showSplash) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-2xl">
+              <Radio className="w-12 h-12 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold text-white mb-2">RadioLab</h1>
+            <h2 className="text-xl text-blue-300 mb-4">Inspection System</h2>
+            <p className="text-slate-400 text-sm">INS-RadioLab</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 0.5 }}
+            className="mt-8"
+          >
+            <div className="w-8 h-8 border-t-2 border-blue-400 rounded-full animate-spin mx-auto"></div>
+          </motion.div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100" dir="rtl">
+      <div className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-800 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center">
+              <Radio className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">RadioLab Inspection System</h1>
+              <p className="text-blue-200">מערכת בדיקות מכשירי קשר</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'סה"כ מכשירים', value: stats.totalDevices, icon: Package, color: 'blue' },
+            { label: 'בדיקות שבוצעו', value: stats.totalInspections, icon: CheckCircle, color: 'green' },
+            { label: 'תקלות פתוחות', value: stats.openFaults, icon: AlertTriangle, color: 'amber' },
+            { label: 'מכשירים מוצפנים', value: stats.encryptedDevices, icon: TrendingUp, color: 'purple' },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl">
+                <CardContent className="p-5">
+                  <div className={`w-10 h-10 bg-${stat.color}-100 rounded-xl flex items-center justify-center mb-3`}>
+                    <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
+                  </div>
+                  <p className="text-3xl font-bold text-slate-800">{stat.value}</p>
+                  <p className="text-sm text-slate-500">{stat.label}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Link to={createPageUrl('NewInspection')}>
+              <Card className="bg-gradient-to-br from-blue-600 to-blue-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <ClipboardList className="w-10 h-10 mb-4 opacity-90" />
+                      <h3 className="text-xl font-bold mb-1">בדיקה חדשה</h3>
+                      <p className="text-blue-100 text-sm">התחל בדיקת מכשיר</p>
+                    </div>
+                    <ArrowLeft className="w-6 h-6 opacity-70" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Link to={createPageUrl('Devices')}>
+              <Card className="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Package className="w-10 h-10 mb-4 opacity-90" />
+                      <h3 className="text-xl font-bold mb-1">מלאי מכשירים</h3>
+                      <p className="text-emerald-100 text-sm">ניהול והוספת מכשירים</p>
+                    </div>
+                    <ArrowLeft className="w-6 h-6 opacity-70" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Link to={createPageUrl('InspectionHistory')}>
+              <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <History className="w-10 h-10 mb-4 opacity-90" />
+                      <h3 className="text-xl font-bold mb-1">היסטוריית בדיקות</h3>
+                      <p className="text-purple-100 text-sm">צפייה בבדיקות קודמות</p>
+                    </div>
+                    <ArrowLeft className="w-6 h-6 opacity-70" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </motion.div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="bg-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">התפלגות מכשירים</h3>
+              <div className="space-y-4">
+                {Object.entries(groupCounts).map(([group, count]) => (
+                  <div key={group} className="flex items-center gap-4">
+                    <span className="w-12 text-sm font-medium text-slate-600">{group}</span>
+                    <div className="flex-1 h-8 bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all"
+                        style={{ width: `${(count / stats.totalDevices) * 100 || 0}%` }}
+                      />
+                    </div>
+                    <span className="w-12 text-sm font-bold text-slate-800">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-800">בדיקות אחרונות</h3>
+                <Link to={createPageUrl('InspectionHistory')}>
+                  <Button variant="ghost" size="sm">צפה בהכל</Button>
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {inspections.slice(0, 5).map(inspection => (
+                  <div key={inspection.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <ClipboardList className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-800">בדיקה #{inspection.inspection_number}</p>
+                      <p className="text-sm text-slate-500">{inspection.soldier_name}</p>
+                    </div>
+                    <span className="text-xs text-slate-400">
+                      {new Date(inspection.created_date).toLocaleDateString('he-IL')}
+                    </span>
+                  </div>
+                ))}
+                {inspections.length === 0 && (
+                  <p className="text-center text-slate-500 py-8">אין בדיקות קודמות</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
