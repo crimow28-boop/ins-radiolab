@@ -1,0 +1,351 @@
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  ArrowRight, 
+  Search, 
+  ClipboardList,
+  Calendar,
+  User,
+  Radio,
+  Eye,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Loader2
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+
+export default function InspectionHistory() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedInspection, setSelectedInspection] = useState(null);
+
+  const { data: inspections = [], isLoading } = useQuery({
+    queryKey: ['inspections'],
+    queryFn: () => base44.entities.Inspection.list('-created_date'),
+  });
+
+  const filteredInspections = inspections.filter(insp => {
+    const search = searchTerm.toLowerCase();
+    return (
+      (insp.soldier_name || '').toLowerCase().includes(search) ||
+      String(insp.inspection_number).includes(search) ||
+      (insp.device_serial_numbers || []).some(s => s.toLowerCase().includes(search))
+    );
+  });
+
+  const profileLabels = {
+    '710': '710',
+    '711': '711',
+    '713': '713',
+    'hargol_4200': 'חרגול (4200)',
+    'hargol_4400': 'חרגול (4400)',
+    'elal': 'אל-על',
+    'lotus': 'לוטוס',
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100" dir="rtl">
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center gap-4">
+            <Link to={createPageUrl('Home')}>
+              <Button variant="ghost">
+                <ArrowRight className="w-4 h-4 ml-2" />
+                חזרה
+              </Button>
+            </Link>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-800">היסטוריית בדיקות</h1>
+                <p className="text-sm text-slate-500">{inspections.length} בדיקות במערכת</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <Card className="bg-white border-0 shadow-lg mb-6">
+          <CardContent className="p-4">
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="חפש לפי שם חייל, מספר בדיקה או מספר סידורי..."
+                className="h-12 pr-10 rounded-xl"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+          </div>
+        ) : filteredInspections.length === 0 ? (
+          <Card className="bg-white border-0 shadow-lg">
+            <CardContent className="text-center py-20 text-slate-500">
+              <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>לא נמצאו בדיקות</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {filteredInspections.map((inspection, index) => (
+              <motion.div
+                key={inspection.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.02 }}
+              >
+                <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                          <span className="text-blue-600 font-bold">#{inspection.inspection_number}</span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-semibold text-slate-800">
+                              בדיקה #{inspection.inspection_number}
+                            </h3>
+                            <Badge variant="outline">
+                              {profileLabels[inspection.profile] || inspection.profile}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <User className="w-4 h-4" />
+                              {inspection.soldier_name}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {format(new Date(inspection.created_date), 'dd/MM/yyyy HH:mm')}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Radio className="w-4 h-4" />
+                              {(inspection.device_serial_numbers || []).length} מכשירים
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {(inspection.device_serial_numbers || []).slice(0, 3).map(serial => (
+                              <Badge key={serial} className="bg-slate-100 text-slate-700">
+                                {serial}
+                              </Badge>
+                            ))}
+                            {(inspection.device_serial_numbers || []).length > 3 && (
+                              <Badge className="bg-slate-100 text-slate-700">
+                                +{(inspection.device_serial_numbers || []).length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex gap-2">
+                          {inspection.cavad_status === 'passed' ? (
+                            <Badge className="bg-green-100 text-green-800">
+                              <CheckCircle className="w-3 h-3 ml-1" />
+                              CAVAD עבר
+                            </Badge>
+                          ) : inspection.cavad_status === 'failed' ? (
+                            <Badge className="bg-red-100 text-red-800">
+                              <XCircle className="w-3 h-3 ml-1" />
+                              CAVAD נכשל
+                            </Badge>
+                          ) : null}
+                          {inspection.fault_description && inspection.fault_description !== 'אין' && (
+                            <Badge className="bg-amber-100 text-amber-800">
+                              <AlertTriangle className="w-3 h-3 ml-1" />
+                              תקלה
+                            </Badge>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedInspection(inspection)}
+                        >
+                          <Eye className="w-4 h-4 ml-1" />
+                          פרטים
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Inspection Details Dialog */}
+      <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>פרטי בדיקה #{selectedInspection?.inspection_number}</DialogTitle>
+          </DialogHeader>
+          {selectedInspection && (
+            <ScrollArea className="max-h-[70vh] pr-4">
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-xl">
+                    <p className="text-sm text-slate-500">שם חייל</p>
+                    <p className="font-semibold">{selectedInspection.soldier_name}</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl">
+                    <p className="text-sm text-slate-500">פרופיל</p>
+                    <p className="font-semibold">{profileLabels[selectedInspection.profile]}</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl">
+                    <p className="text-sm text-slate-500">תאריך</p>
+                    <p className="font-semibold">
+                      {format(new Date(selectedInspection.created_date), 'dd/MM/yyyy HH:mm')}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl">
+                    <p className="text-sm text-slate-500">סטטוס מסירה</p>
+                    <p className="font-semibold">
+                      {selectedInspection.delivery_status === 'delivered' ? 'נמסר' : 'לא נמסר'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-50 rounded-xl">
+                  <p className="text-sm text-slate-500 mb-2">מכשירים</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedInspection.device_serial_numbers || []).map(serial => (
+                      <Badge key={serial} className="bg-blue-100 text-blue-800">
+                        {serial}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3">חומרה</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-slate-500">סוג אנטנה:</span> {selectedInspection.antenna_type || '-'}
+                    </div>
+                    <div>
+                      <span className="text-slate-500">סוג מערכת:</span> {selectedInspection.system_type || '-'}
+                    </div>
+                    <div>
+                      <span className="text-slate-500">מצב איטום:</span> {selectedInspection.sealing_status ? '✓' : '✗'}
+                    </div>
+                    <div>
+                      <span className="text-slate-500">ברגי איטום סגורים:</span> {selectedInspection.sealing_screws_closed ? '✓' : '✗'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3">בדיקות CAVAD</h4>
+                  <Badge className={
+                    selectedInspection.cavad_status === 'passed' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }>
+                    {selectedInspection.cavad_status === 'passed' ? 'עבר' : 'נכשל'}
+                  </Badge>
+                  {selectedInspection.cavad_tests?.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {selectedInspection.cavad_tests.map((test, i) => (
+                        <div key={i} className="p-3 bg-red-50 rounded-lg text-sm">
+                          <span className="font-medium">בדיקה #{test.test_number}:</span>{' '}
+                          גבולות: {test.lower_limit} - {test.upper_limit}, נמדד: {test.measured_value}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3">בדיקות תפקוד</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    {[
+                      { key: 'encryption_check', label: 'הצפנה' },
+                      { key: 'frequencies_check', label: 'תדרים' },
+                      { key: 'side_connector_closed', label: 'מחבר צד' },
+                      { key: 'communication_test', label: 'בדיקת קשר' },
+                      { key: 'battery_replaced', label: 'סוללה הוחלפה' },
+                    ].map(({ key, label }) => (
+                      <div key={key} className="flex items-center gap-2">
+                        {selectedInspection[key] ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-slate-300" />
+                        )}
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {selectedInspection.fault_description && selectedInspection.fault_description !== 'אין' && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3">תקלות</h4>
+                    <p className="p-3 bg-amber-50 rounded-lg">{selectedInspection.fault_description}</p>
+                  </div>
+                )}
+
+                {selectedInspection.remarks && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3">הערות</h4>
+                    <p className="p-3 bg-slate-50 rounded-lg">{selectedInspection.remarks}</p>
+                  </div>
+                )}
+
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3">חתימות</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {selectedInspection.soldier_signature?.signature_data && (
+                      <div className="p-4 bg-slate-50 rounded-xl">
+                        <p className="text-sm text-slate-500 mb-2">חתימת חייל</p>
+                        <p className="font-medium">{selectedInspection.soldier_signature.name}</p>
+                        <p className="text-sm text-slate-500">{selectedInspection.soldier_signature.personal_number}</p>
+                        <img 
+                          src={selectedInspection.soldier_signature.signature_data} 
+                          alt="חתימה" 
+                          className="mt-2 max-h-16 border rounded"
+                        />
+                      </div>
+                    )}
+                    {selectedInspection.supervisor_signature?.signature_data && (
+                      <div className="p-4 bg-slate-50 rounded-xl">
+                        <p className="text-sm text-slate-500 mb-2">חתימת מפקח</p>
+                        <p className="font-medium">{selectedInspection.supervisor_signature.name}</p>
+                        <p className="text-sm text-slate-500">{selectedInspection.supervisor_signature.personal_number}</p>
+                        <img 
+                          src={selectedInspection.supervisor_signature.signature_data} 
+                          alt="חתימה" 
+                          className="mt-2 max-h-16 border rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
