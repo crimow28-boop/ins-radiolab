@@ -44,6 +44,26 @@ export default function CavadSection({ data, onChange }) {
       </div>
 
       <div className="space-y-2">
+        <Label className="text-slate-700">סוג בדיקה</Label>
+        <Select
+          value={data.cavad_type || ''}
+          onValueChange={(v) => onChange({ ...data, cavad_type: v })}
+        >
+          <SelectTrigger className="h-12 rounded-xl">
+            <SelectValue placeholder="בחר סוג בדיקה" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="710">710</SelectItem>
+            <SelectItem value="710_mach5091">710+מח-5091</SelectItem>
+            <SelectItem value="711">711</SelectItem>
+            <SelectItem value="711_mach5091">711+מח-5091</SelectItem>
+            <SelectItem value="713">713</SelectItem>
+            <SelectItem value="713_mach5091">713+מח-5091</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
         <Label className="text-slate-700">סטטוס בדיקה</Label>
         <Select
           value={data.cavad_status || ''}
