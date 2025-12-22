@@ -264,23 +264,40 @@ export default function NewInspection() {
             </span>
           </div>
           
-          <div className="flex gap-1 overflow-x-auto pb-2">
-            {STEPS.map((step, index) => (
-              <button
-                key={step.id}
-                onClick={() => setCurrentStep(index)}
-                className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all ${
-                  index === currentStep
-                    ? 'bg-blue-600 text-white'
-                    : index < currentStep
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-slate-100 text-slate-500'
-                }`}
-              >
-                {index < currentStep && <CheckCircle className="w-3 h-3 inline ml-1" />}
-                {step.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 py-2">
+            {STEPS.map((step, index) => {
+              const isActive = index === currentStep;
+              const isCompleted = index < currentStep;
+              
+              return (
+                <div key={step.id} className="flex items-center">
+                  <button
+                    onClick={() => setCurrentStep(index)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                      isActive
+                        ? 'bg-slate-900 text-white shadow-md'
+                        : isCompleted
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-white text-slate-400 border border-slate-200'
+                    }`}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle className="w-4 h-4" />
+                    ) : (
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                        isActive ? 'bg-white/20' : 'bg-slate-100'
+                      }`}>
+                        {index + 1}
+                      </span>
+                    )}
+                    {step.label}
+                  </button>
+                  {index < STEPS.length - 1 && (
+                    <div className="w-4 h-0.5 bg-slate-200 mx-2" />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

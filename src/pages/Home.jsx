@@ -13,8 +13,11 @@ import {
   AlertTriangle,
   TrendingUp,
   CheckCircle,
-  ArrowLeft
+  ArrowLeft,
+  Activity
 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { subDays, format } from 'date-fns';
 import { motion } from 'framer-motion';
 
 export default function Home() {
@@ -52,6 +55,19 @@ export default function Home() {
     '710': devices.filter(d => d.device_group === '710').length,
     '711': devices.filter(d => d.device_group === '711').length,
   };
+
+  // Prepare chart data - last 7 days
+  const chartData = Array.from({ length: 7 }).map((_, i) => {
+    const date = subDays(new Date(), 6 - i);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const count = inspections.filter(insp => 
+      insp.created_date.startsWith(dateStr)
+    ).length;
+    return {
+      name: format(date, 'dd/MM'),
+      count: count
+    };
+  });
 
   if (showSplash) {
     return (
@@ -195,57 +211,105 @@ export default function Home() {
           </motion.div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="bg-white border-0 shadow-lg">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="bg-white border-0 shadow-lg lg:col-span-2">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">התפלגות מכשירים</h3>
-              <div className="space-y-4">
-                {Object.entries(groupCounts).map(([group, count]) => (
-                  <div key={group} className="flex items-center gap-4">
-                    <span className="w-12 text-sm font-medium text-slate-600">{group}</span>
-                    <div className="flex-1 h-8 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all"
-                        style={{ width: `${(count / stats.totalDevices) * 100 || 0}%` }}
-                      />
-                    </div>
-                    <span className="w-12 text-sm font-bold text-slate-800">{count}</span>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-indigo-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-800">פעילות בדיקות (7 ימים אחרונים)</h3>
+              </div>
+              <div className="h-[300px] w-full" dir="ltr">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="#3b82f6" 
+                      fillOpacity={1} 
+                      fill="url(#colorCount)" 
+                      strokeWidth={3}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white border-0 shadow-lg">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-800">בדיקות אחרונות</h3>
-                <Link to={createPageUrl('InspectionHistory')}>
-                  <Button variant="ghost" size="sm">צפה בהכל</Button>
-                </Link>
-              </div>
-              <div className="space-y-3">
-                {inspections.slice(0, 5).map(inspection => (
-                  <div key={inspection.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <ClipboardList className="w-5 h-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">התפלגות מכשירים</h3>
+              <div className="space-y-6">
+                {Object.entries(groupCounts).map(([group, count]) => (
+                  <div key={group}>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="font-medium text-slate-700">קבוצה {group}</span>
+                      <span className="text-slate-500">{count} מכשירים</span>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-800">בדיקה #{inspection.inspection_number}</p>
-                      <p className="text-sm text-slate-500">{inspection.soldier_name}</p>
+                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-1000"
+                        style={{ width: `${(count / stats.totalDevices) * 100 || 0}%` }}
+                      />
                     </div>
-                    <span className="text-xs text-slate-400">
-                      {new Date(inspection.created_date).toLocaleDateString('he-IL')}
-                    </span>
                   </div>
                 ))}
-                {inspections.length === 0 && (
-                  <p className="text-center text-slate-500 py-8">אין בדיקות קודמות</p>
-                )}
               </div>
             </CardContent>
           </Card>
         </div>
+
+        <Card className="bg-white border-0 shadow-lg mt-6">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-slate-800">בדיקות אחרונות</h3>
+              <Link to={createPageUrl('InspectionHistory')}>
+                <Button variant="outline" size="sm" className="rounded-full hover:bg-slate-50">
+                  צפה בהכל
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                </Button>
+              </Link>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {inspections.slice(0, 6).map(inspection => (
+                <div key={inspection.id} className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-blue-200 transition-colors">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-600 font-bold border border-slate-100">
+                    #{inspection.inspection_number}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-800 truncate">{inspection.soldier_name}</p>
+                    <p className="text-xs text-slate-500 flex items-center gap-1">
+                      <ClipboardList className="w-3 h-3" />
+                      {(inspection.device_serial_numbers || []).length} מכשירים
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium bg-white px-2 py-1 rounded-lg text-slate-500 shadow-sm border border-slate-100">
+                    {format(new Date(inspection.created_date), 'dd/MM')}
+                  </span>
+                </div>
+              ))}
+              {inspections.length === 0 && (
+                <div className="col-span-full text-center py-12 text-slate-500">
+                  <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p>אין בדיקות במערכת</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

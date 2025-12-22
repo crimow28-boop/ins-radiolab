@@ -260,15 +260,15 @@ export default function Devices() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="text-right">מספר סידורי</TableHead>
-                    <TableHead className="text-right">קבוצה</TableHead>
-                    <TableHead className="text-right">שם</TableHead>
-                    <TableHead className="text-right">סטטוס</TableHead>
-                    <TableHead className="text-right">הצפנה</TableHead>
-                    <TableHead className="text-right">בדיקות</TableHead>
-                    <TableHead className="text-right">תקלות</TableHead>
-                    <TableHead className="text-right">פעולות</TableHead>
+                  <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
+                    <TableHead className="text-right font-semibold text-slate-900">מספר סידורי</TableHead>
+                    <TableHead className="text-right font-semibold text-slate-900">קבוצה</TableHead>
+                    <TableHead className="text-right font-semibold text-slate-900">שם</TableHead>
+                    <TableHead className="text-right font-semibold text-slate-900">סטטוס</TableHead>
+                    <TableHead className="text-right font-semibold text-slate-900">הצפנה</TableHead>
+                    <TableHead className="text-right font-semibold text-slate-900">בדיקות</TableHead>
+                    <TableHead className="text-right font-semibold text-slate-900">תקלות</TableHead>
+                    <TableHead className="text-right font-semibold text-slate-900">פעולות</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -279,17 +279,19 @@ export default function Devices() {
                         key={device.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.02 }}
-                        className="hover:bg-slate-50"
+                        transition={{ delay: index * 0.01 }}
+                        className="hover:bg-blue-50/30 transition-colors border-b border-slate-50"
                       >
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <Radio className="w-4 h-4 text-slate-400" />
-                            {device.serial_number}
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                              <Radio className="w-4 h-4" />
+                            </div>
+                            <span className="font-mono text-base">{device.serial_number}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">
+                          <Badge variant="outline" className="font-normal bg-white">
                             {groupLabels[device.device_group] || device.device_group}
                           </Badge>
                         </TableCell>
@@ -297,56 +299,63 @@ export default function Devices() {
                           {device.device_name || '-'}
                         </TableCell>
                         <TableCell>
-                          <Badge className={
+                          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                             device.status === 'active' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-slate-100 text-slate-800'
-                          }>
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+                              : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              device.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'
+                            }`} />
                             {device.status === 'active' ? 'פעיל' : device.status}
-                          </Badge>
+                          </div>
                         </TableCell>
                         <TableCell>
                           {device.encryption_status === 'encrypted' ? (
-                            <div className="flex items-center gap-1 text-green-600">
-                              <Shield className="w-4 h-4" />
-                              <span className="text-sm">מוצפן</span>
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full w-fit">
+                              <Shield className="w-3 h-3" />
+                              מוצפן
                             </div>
                           ) : (
-                            <span className="text-slate-400 text-sm">לא מוצפן</span>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full w-fit">
+                              <Shield className="w-3 h-3 opacity-50" />
+                              לא מוצפן
+                            </div>
                           )}
                         </TableCell>
                         <TableCell>
-                          <span className="text-slate-600">{device.total_inspections || 0}</span>
+                          <span className="text-slate-600 font-mono text-sm">{device.total_inspections || 0}</span>
                         </TableCell>
                         <TableCell>
                           {deviceFaults.length > 0 ? (
-                            <Badge className="bg-red-100 text-red-800">
+                            <Badge variant="destructive" className="bg-red-50 text-red-600 border-red-100 hover:bg-red-100">
                               <AlertTriangle className="w-3 h-3 ml-1" />
                               {deviceFaults.length}
                             </Badge>
                           ) : (
-                            <span className="text-slate-400 text-sm">אין</span>
+                            <span className="text-slate-400 text-xs">-</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
+                          <div className="flex items-center gap-1">
                             <Link to={createPageUrl(`DeviceHistory?serial=${device.serial_number}`)}>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50">
                                 <History className="w-4 h-4" />
                               </Button>
                             </Link>
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
+                              className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
                               onClick={() => setEditingDevice(device)}
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
+                              className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
                               onClick={() => deleteMutation.mutate(device.id)}
-                              className="text-red-500 hover:text-red-700"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

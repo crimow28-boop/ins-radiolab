@@ -83,25 +83,36 @@ export default function Layout({ children, currentPageName }) {
             </div>
           </div>
 
-          <nav className="flex-1 px-4 py-6 space-y-1">
-            {navItems.map((item) => (
-              <Link key={item.name} to={createPageUrl(item.name)}>
-                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  currentPageName === item.name 
-                    ? 'bg-blue-50 text-blue-600' 
-                    : 'text-slate-600 hover:bg-slate-50'
-                }`}>
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </div>
-              </Link>
-            ))}
+          <nav className="flex-1 px-3 py-6 space-y-2">
+            {navItems.map((item) => {
+              const isActive = currentPageName === item.name;
+              return (
+                <Link key={item.name} to={createPageUrl(item.name)}>
+                  <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${
+                    isActive 
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
+                      : 'text-slate-600 hover:bg-slate-50'
+                  }`}>
+                    {isActive && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 opacity-100" />
+                    )}
+                    <item.icon className={`w-5 h-5 relative z-10 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-600'}`} />
+                    <span className="font-medium relative z-10">{item.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
           </nav>
 
-          <div className="px-4 py-4 border-t border-slate-100">
-            <div className="px-4 py-3 bg-slate-50 rounded-xl">
-              <p className="text-xs text-slate-500">INS-RadioLab</p>
-              <p className="text-xs text-slate-400">v1.0.0</p>
+          <div className="p-4 border-t border-slate-100">
+            <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold">
+                RL
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-900 truncate">INS-RadioLab</p>
+                <p className="text-xs text-slate-500 truncate">v1.0.0 • Stable</p>
+              </div>
             </div>
           </div>
         </div>
