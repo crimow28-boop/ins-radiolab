@@ -86,7 +86,7 @@ export default function InspectionHistory() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="חפש לפי שם חייל, מספר בדיקה או מספר סידורי..."
-                className="h-12 pr-10 rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 transition-all"
+                className="h-12 pr-10 rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 transition-all text-right"
               />
             </div>
           </CardContent>

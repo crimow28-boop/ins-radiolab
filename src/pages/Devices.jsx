@@ -148,7 +148,7 @@ export default function Devices() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="חפש לפי מספר סידורי..."
-                  className="h-12 pr-10 rounded-xl"
+                  className="h-12 pr-10 rounded-xl text-right"
                 />
               </div>
               <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -169,7 +169,7 @@ export default function Devices() {
                         value={newDevice.serial_number}
                         onChange={(e) => setNewDevice({ ...newDevice, serial_number: e.target.value })}
                         placeholder="הזן מספר סידורי"
-                        className="h-12 rounded-xl"
+                        className="h-12 rounded-xl text-right"
                       />
                     </div>
                     <div className="space-y-2">
@@ -194,7 +194,7 @@ export default function Devices() {
                         value={newDevice.device_name}
                         onChange={(e) => setNewDevice({ ...newDevice, device_name: e.target.value })}
                         placeholder="שם מכשיר"
-                        className="h-12 rounded-xl"
+                        className="h-12 rounded-xl text-right"
                       />
                     </div>
                     {(newDevice.device_group === 'hargol') && (
@@ -204,7 +204,7 @@ export default function Devices() {
                           value={newDevice.ip_address}
                           onChange={(e) => setNewDevice({ ...newDevice, ip_address: e.target.value })}
                           placeholder="192.168.X.X"
-                          className="h-12 rounded-xl"
+                          className="h-12 rounded-xl text-right"
                         />
                       </div>
                     )}
@@ -491,7 +491,7 @@ export default function Devices() {
                   <Input
                     value={editingDevice.device_name || ''}
                     onChange={(e) => setEditingDevice({ ...editingDevice, device_name: e.target.value })}
-                    className="h-12 rounded-xl"
+                    className="h-12 rounded-xl text-right"
                   />
                 </div>
                 {editingDevice.device_group === 'hargol' && (
@@ -500,7 +500,7 @@ export default function Devices() {
                     <Input
                       value={editingDevice.ip_address || ''}
                       onChange={(e) => setEditingDevice({ ...editingDevice, ip_address: e.target.value })}
-                      className="h-12 rounded-xl"
+                      className="h-12 rounded-xl text-right"
                     />
                   </div>
                 )}
