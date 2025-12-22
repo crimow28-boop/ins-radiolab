@@ -148,66 +148,7 @@ export default function Home() {
 
         {/* Navigation moved to bottom bar */}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="bg-white border-0 shadow-lg lg:col-span-2">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <Activity className="w-4 h-4 text-indigo-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-800">פעילות בדיקות (7 ימים אחרונים)</h3>
-              </div>
-              <div className="h-[300px] w-full" dir="ltr">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
 
-                    <Area
-                      type="monotone"
-                      dataKey="count"
-                      stroke="#3b82f6"
-                      fillOpacity={1}
-                      fill="url(#colorCount)"
-                      strokeWidth={3} />
-
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-0 shadow-lg">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">התפלגות מכשירים</h3>
-              <div className="space-y-6">
-                {Object.entries(groupCounts).map(([group, count]) =>
-                <div key={group}>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="font-medium text-slate-700">קבוצה {group}</span>
-                      <span className="text-slate-500">{count} מכשירים</span>
-                    </div>
-                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-1000"
-                      style={{ width: `${count / stats.totalDevices * 100 || 0}%` }} />
-
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         <Card className="bg-white border-0 shadow-lg mt-6">
           <CardContent className="p-6">
