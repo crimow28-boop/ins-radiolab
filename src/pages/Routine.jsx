@@ -90,11 +90,11 @@ export default function Routine() {
                 <p className="text-slate-500 mt-2">{selectedCard.description}</p>
               </div>
               <Button
+                variant="outline"
                 onClick={() => setManageDevices(selectedCard)}
-                className="whitespace-nowrap"
-                size="sm"
               >
-                הוסף ({(selectedCard.devices || []).length})
+                <Radio className="w-4 h-4 ml-2" />
+                נהל מכשירים ({(selectedCard.devices || []).length})
               </Button>
             </div>
             {(selectedCard.devices || []).length > 0 && (

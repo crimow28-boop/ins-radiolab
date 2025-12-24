@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Trash2, CheckCheck, X } from 'lucide-react';
+import { Search, Trash2, CheckCheck, X, Circle } from 'lucide-react';
 
 export default function DeviceManager({ devices, selectedDevices, onUpdate, onCancel }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -93,7 +93,7 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
       </div>
 
       <ScrollArea className="h-96 border rounded-xl p-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="space-y-2">
           {filteredDevices.map((device) => {
             const isSelected = localSelected.includes(device.serial_number);
             const status = getDeviceStatus(device);
@@ -101,14 +101,32 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
               <div
                 key={device.id}
                 onClick={() => toggleDevice(device.serial_number)}
-                className={`
-                  p-4 rounded-xl cursor-pointer transition-all text-center
-                  ${status === 'completed' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}
-                  ${isSelected ? 'ring-4 ring-blue-300 scale-105' : ''}
-                  text-white font-semibold shadow-md hover:shadow-lg
-                `}
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                  isSelected ? 'bg-blue-50 border-2 border-blue-200' : 'hover:bg-slate-50 border-2 border-transparent'
+                }`}
               >
-                {device.serial_number}
+                <Checkbox checked={isSelected} className="pointer-events-none" />
+                <Circle 
+                  className={`w-3 h-3 fill-current ${
+                    status === 'completed' ? 'text-green-500' : 'text-red-500'
+                  }`}
+                />
+                <div className="flex-1">
+                  <p className="font-medium">{device.serial_number}</p>
+                  <p className="text-xs text-slate-500">
+                    {device.device_name || device.device_group} • {device.total_inspections || 0} בדיקות
+                  </p>
+                </div>
+                <Badge 
+                  variant="outline" 
+                  className={`text-xs ${
+                    status === 'completed' 
+                      ? 'bg-green-50 text-green-700 border-green-200' 
+                      : 'bg-red-50 text-red-700 border-red-200'
+                  }`}
+                >
+                  {status === 'completed' ? 'הושלם' : 'ממתין'}
+                </Badge>
               </div>
             );
           })}
