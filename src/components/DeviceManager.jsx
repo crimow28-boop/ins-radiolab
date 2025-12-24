@@ -41,18 +41,39 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
 
   return (
     <div className="flex flex-col h-full overflow-hidden space-y-3">
-      <div className="flex-shrink-0 space-y-3">
-        <div className="relative">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+      <div className="flex-shrink-0 space-y-3 bg-white pb-2 z-10">
+        <div className="relative group">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="חפש מכשיר..."
-            className="h-12 pr-10 rounded-xl bg-white border-slate-200 shadow-sm focus:border-blue-500 transition-all"
+            placeholder="חפש לפי מספר סידורי או שם..."
+            className="h-14 pr-12 pl-4 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all text-base"
           />
         </div>
 
-
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={selectAllFiltered}
+            className="flex-shrink-0 rounded-full border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
+          >
+            <CheckCheck className="w-4 h-4 ml-1" />
+            בחר הכל ({filteredDevices.length})
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={clearAll}
+            className="flex-shrink-0 rounded-full border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+          >
+            <X className="w-4 h-4 ml-1" />
+            נקה בחירה ({localSelected.length})
+          </Button>
+        </div>
       </div>
 
       <ScrollArea className="flex-1 border rounded-xl bg-slate-50/50">
