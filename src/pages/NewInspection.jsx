@@ -169,7 +169,7 @@ export default function NewInspection() {
   const isStepValid = () => {
     switch (STEPS[currentStep].id) {
       case 'basic':
-        return formData.soldier_name && formData.profile && formData.device_serial_numbers.length > 0;
+        return formData.device_serial_numbers.length > 0;
       default:
         return true;
     }
