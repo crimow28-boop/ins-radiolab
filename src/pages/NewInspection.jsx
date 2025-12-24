@@ -92,6 +92,20 @@ export default function NewInspection() {
     ? (inspections[0].inspection_number || 0) + 1 
     : 1;
 
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (user && user.full_name) {
+          updateFormData({ soldier_name: user.full_name });
+        }
+      } catch (error) {
+        console.error('Failed to load user:', error);
+      }
+    };
+    loadUser();
+  }, []);
+
   const createInspectionMutation = useMutation({
     mutationFn: async (data) => {
       const inspection = await base44.entities.Inspection.create({
