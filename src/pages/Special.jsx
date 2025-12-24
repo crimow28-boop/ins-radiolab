@@ -133,6 +133,33 @@ export default function Special() {
               </motion.div>
             ))}
           </div>
+
+          {manageDevices && (
+            <Dialog open={!!manageDevices} onOpenChange={() => setManageDevices(null)}>
+              <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-4 sm:p-6" dir="rtl">
+                <DialogHeader className="flex-shrink-0">
+                  <DialogTitle>ניהול מכשירים - {manageDevices.title}</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-hidden min-h-0 mt-2">
+                  <DeviceManager
+                    devices={devices}
+                    selectedDevices={manageDevices.devices || []}
+                    onUpdate={(updatedDevices) => {
+                      updateMutation.mutate({ 
+                        id: manageDevices.id, 
+                        data: { devices: updatedDevices }
+                      });
+                      setManageDevices(null);
+                      if (selectedCard?.id === manageDevices.id) {
+                        setSelectedCard({ ...manageDevices, devices: updatedDevices });
+                      }
+                    }}
+                    onCancel={() => setManageDevices(null)}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
     );
