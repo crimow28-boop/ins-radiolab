@@ -40,7 +40,7 @@ const PROFILES = [
 const STEPS = [
   { id: 'basic', label: 'פרטים בסיסיים' },
   { id: 'hardware', label: 'חומרה' },
-  { id: 'cavad', label: 'CAVAD' },
+  { id: 'cavad', label: 'צב"ד' },
   { id: 'functional', label: 'בדיקות תפקוד' },
   { id: 'faults', label: 'תקלות וציוד' },
   { id: 'signatures', label: 'חתימות' },
