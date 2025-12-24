@@ -8,10 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, ArrowRight, Settings as SettingsIcon, CheckCircle, XCircle, MinusCircle, Radio, Trash2 } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Edit, ArrowRight, Settings as SettingsIcon, CheckCircle, XCircle, MinusCircle, Radio } from 'lucide-react';
 import { motion } from 'framer-motion';
+import DeviceManager from '../components/DeviceManager';
 
 export default function Routine() {
   const queryClient = useQueryClient();
@@ -264,73 +263,21 @@ export default function Routine() {
               <DialogHeader>
                 <DialogTitle>ניהול מכשירים - {manageDevices.title}</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {(manageDevices.devices || []).map((serial) => (
-                    <Badge
-                      key={serial}
-                      variant="secondary"
-                      className="cursor-pointer hover:bg-red-100"
-                      onClick={() => {
-                        const updated = {
-                          ...manageDevices,
-                          devices: manageDevices.devices.filter(s => s !== serial)
-                        };
-                        setManageDevices(updated);
-                      }}
-                    >
-                      {serial}
-                      <Trash2 className="w-3 h-3 mr-1" />
-                    </Badge>
-                  ))}
-                </div>
-                <ScrollArea className="h-96 border rounded-xl p-4">
-                  <div className="space-y-2">
-                    {devices.map((device) => {
-                      const isSelected = (manageDevices.devices || []).includes(device.serial_number);
-                      return (
-                        <div
-                          key={device.id}
-                          onClick={() => {
-                            const currentDevices = manageDevices.devices || [];
-                            const updated = {
-                              ...manageDevices,
-                              devices: isSelected
-                                ? currentDevices.filter(s => s !== device.serial_number)
-                                : [...currentDevices, device.serial_number]
-                            };
-                            setManageDevices(updated);
-                          }}
-                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                            isSelected ? 'bg-blue-50 border-2 border-blue-200' : 'hover:bg-slate-50 border-2 border-transparent'
-                          }`}
-                        >
-                          <Checkbox checked={isSelected} className="pointer-events-none" />
-                          <div className="flex-1">
-                            <p className="font-medium">{device.serial_number}</p>
-                            <p className="text-xs text-slate-500">{device.device_name || device.device_group}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-                <Button
-                  onClick={() => {
-                    updateMutation.mutate({ 
-                      id: manageDevices.id, 
-                      data: { devices: manageDevices.devices || [] }
-                    });
-                    setManageDevices(null);
-                    if (selectedCard?.id === manageDevices.id) {
-                      setSelectedCard(manageDevices);
-                    }
-                  }}
-                  className="w-full"
-                >
-                  שמור שינויים
-                </Button>
-              </div>
+              <DeviceManager
+                devices={devices}
+                selectedDevices={manageDevices.devices || []}
+                onUpdate={(updatedDevices) => {
+                  updateMutation.mutate({ 
+                    id: manageDevices.id, 
+                    data: { devices: updatedDevices }
+                  });
+                  setManageDevices(null);
+                  if (selectedCard?.id === manageDevices.id) {
+                    setSelectedCard({ ...manageDevices, devices: updatedDevices });
+                  }
+                }}
+                onCancel={() => setManageDevices(null)}
+              />
             </DialogContent>
           </Dialog>
         )}
