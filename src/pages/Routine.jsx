@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, ArrowRight, Settings as SettingsIcon, CheckCircle, XCircle, MinusCircle, Radio, Trash2 } from 'lucide-react';
+import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import DeviceManager from '../components/DeviceManager';
 
@@ -98,10 +99,15 @@ export default function Routine() {
                 return (
                   <div 
                     key={serial} 
-                    className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 text-center shadow-sm transition-all ${
+                    onClick={() => {
+                      if (!managerMode) {
+                        window.location.href = createPageUrl(`DeviceInspection?serial=${serial}&source=routine`);
+                      }
+                    }}
+                    className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 text-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
                       isCompleted 
-                        ? 'bg-emerald-50 border-emerald-100' 
-                        : 'bg-red-50 border-red-100'
+                        ? 'bg-emerald-50 border-emerald-100 hover:shadow-emerald-100' 
+                        : 'bg-red-50 border-red-100 hover:shadow-red-100'
                     }`}
                   >
                     <span className="font-mono font-bold text-lg text-slate-800">{serial}</span>

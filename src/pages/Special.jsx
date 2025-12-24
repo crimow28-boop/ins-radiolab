@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, ArrowRight, Settings as SettingsIcon, Radio, CheckCircle, XCircle } from 'lucide-react';
+import { createPageUrl } from '@/utils';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import DeviceManager from '../components/DeviceManager';
@@ -75,10 +76,16 @@ export default function Special() {
                 return (
                   <div 
                     key={serial} 
-                    className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 text-center shadow-sm transition-all ${
+                    onClick={() => {
+                      if (!managerMode) {
+                        // Navigate to checklist
+                        window.location.href = createPageUrl(`DeviceInspection?serial=${serial}&source=special`);
+                      }
+                    }}
+                    className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 text-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
                       isCompleted 
-                        ? 'bg-emerald-50 border-emerald-100' 
-                        : 'bg-red-50 border-red-100'
+                        ? 'bg-emerald-50 border-emerald-100 hover:shadow-emerald-100' 
+                        : 'bg-red-50 border-red-100 hover:shadow-red-100'
                     }`}
                   >
                     <span className="font-mono font-bold text-lg text-slate-800">{serial}</span>

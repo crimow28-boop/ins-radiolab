@@ -6,6 +6,7 @@ import NewInspection from './pages/NewInspection';
 import Info from './pages/Info';
 import Routine from './pages/Routine';
 import Special from './pages/Special';
+import DeviceInspection from './pages/DeviceInspection';
 import __Layout from './Layout.jsx';
 
 
@@ -18,6 +19,7 @@ export const PAGES = {
     "Info": Info,
     "Routine": Routine,
     "Special": Special,
+    "DeviceInspection": DeviceInspection,
 }
 
 export const pagesConfig = {
