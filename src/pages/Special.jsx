@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, ArrowRight, Settings as SettingsIcon, Radio } from 'lucide-react';
+import { Plus, Edit, ArrowRight, Settings as SettingsIcon, Radio, CheckCircle, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import DeviceManager from '../components/DeviceManager';
@@ -62,26 +62,56 @@ export default function Special() {
           </Button>
           
           <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-slate-800">{selectedCard.title}</h2>
-                <p className="text-slate-500 mt-2">{selectedCard.description}</p>
-              </div>
+            <div className="mb-4">
+              <h2 className="text-3xl font-bold text-slate-800">{selectedCard.title}</h2>
+              <p className="text-slate-500 mt-1">{selectedCard.description}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              {(selectedCard.devices || []).map((serial) => {
+                const device = devices.find(d => d.serial_number === serial);
+                const isCompleted = (device?.total_inspections || 0) > 0;
+                
+                return (
+                  <div 
+                    key={serial} 
+                    className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 text-center shadow-sm transition-all ${
+                      isCompleted 
+                        ? 'bg-emerald-50 border-emerald-100' 
+                        : 'bg-red-50 border-red-100'
+                    }`}
+                  >
+                    <span className="font-mono font-bold text-lg text-slate-800">{serial}</span>
+                    <div className={`flex items-center gap-1 text-xs font-medium ${
+                      isCompleted ? 'text-emerald-600' : 'text-red-500'
+                    }`}>
+                      {isCompleted ? (
+                        <>
+                          <CheckCircle className="w-3 h-3" />
+                          <span>הושלם</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-3 h-3" />
+                          <span>לביצוע</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              
               <Button
                 variant="outline"
                 onClick={() => setManageDevices(selectedCard)}
+                className="h-auto min-h-[80px] rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 flex flex-col gap-2"
               >
-                <Radio className="w-4 h-4 ml-2" />
-                נהל מכשירים ({(selectedCard.devices || []).length})
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
+                  <Plus className="w-5 h-5 text-blue-600" />
+                </div>
+                <span className="font-medium">הוסף</span>
               </Button>
             </div>
-            {(selectedCard.devices || []).length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {selectedCard.devices.map((serial) => (
-                  <Badge key={serial} variant="secondary">{serial}</Badge>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">

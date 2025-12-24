@@ -3,9 +3,9 @@ import Devices from './pages/Devices';
 import Home from './pages/Home';
 import InspectionHistory from './pages/InspectionHistory';
 import NewInspection from './pages/NewInspection';
-import Special from './pages/Special';
-import Routine from './pages/Routine';
 import Info from './pages/Info';
+import Routine from './pages/Routine';
+import Special from './pages/Special';
 import __Layout from './Layout.jsx';
 
 
@@ -15,9 +15,9 @@ export const PAGES = {
     "Home": Home,
     "InspectionHistory": InspectionHistory,
     "NewInspection": NewInspection,
-    "Special": Special,
-    "Routine": Routine,
     "Info": Info,
+    "Routine": Routine,
+    "Special": Special,
 }
 
 export const pagesConfig = {
