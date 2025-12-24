@@ -7,6 +7,7 @@ import Info from './pages/Info';
 import Routine from './pages/Routine';
 import Special from './pages/Special';
 import DeviceInspection from './pages/DeviceInspection';
+import ChecklistManager from './pages/ChecklistManager';
 import __Layout from './Layout.jsx';
 
 
@@ -20,6 +21,7 @@ export const PAGES = {
     "Routine": Routine,
     "Special": Special,
     "DeviceInspection": DeviceInspection,
+    "ChecklistManager": ChecklistManager,
 }
 
 export const pagesConfig = {
