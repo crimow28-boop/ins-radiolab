@@ -52,19 +52,7 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
           />
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={clearAll}
-            className="flex-shrink-0 rounded-full"
-          >
-            <X className="w-4 h-4 ml-1" />
-            נקה בחירה ({localSelected.length})
-          </Button>
-        </div>
       </div>
 
       <ScrollArea className="flex-1 border rounded-xl bg-slate-50/50">
