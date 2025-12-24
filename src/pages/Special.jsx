@@ -7,7 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, ArrowRight, Settings as SettingsIcon } from 'lucide-react';
+import { Plus, Edit, ArrowRight, Settings as SettingsIcon, Radio, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Special() {
@@ -17,10 +20,16 @@ export default function Special() {
   const [editingCard, setEditingCard] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newCard, setNewCard] = useState({ title: '', description: '' });
+  const [manageDevices, setManageDevices] = useState(null);
 
   const { data: cards = [] } = useQuery({
     queryKey: ['specialCards'],
     queryFn: () => base44.entities.SpecialCard.filter({ is_active: true }, 'order'),
+  });
+
+  const { data: devices = [] } = useQuery({
+    queryKey: ['devices'],
+    queryFn: () => base44.entities.Device.list(),
   });
 
   const createMutation = useMutation({
@@ -54,8 +63,26 @@ export default function Special() {
           </Button>
           
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-slate-800">{selectedCard.title}</h2>
-            <p className="text-slate-500 mt-2">{selectedCard.description}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-slate-800">{selectedCard.title}</h2>
+                <p className="text-slate-500 mt-2">{selectedCard.description}</p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setManageDevices(selectedCard)}
+              >
+                <Radio className="w-4 h-4 ml-2" />
+                נהל מכשירים ({(selectedCard.devices || []).length})
+              </Button>
+            </div>
+            {(selectedCard.devices || []).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {selectedCard.devices.map((serial) => (
+                  <Badge key={serial} variant="secondary">{serial}</Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -201,6 +228,83 @@ export default function Special() {
                 </div>
                 <Button
                   onClick={() => updateMutation.mutate({ id: editingCard.id, data: editingCard })}
+                  className="w-full"
+                >
+                  שמור שינויים
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {manageDevices && (
+          <Dialog open={!!manageDevices} onOpenChange={() => setManageDevices(null)}>
+            <DialogContent className="max-w-2xl" dir="rtl">
+              <DialogHeader>
+                <DialogTitle>ניהול מכשירים - {manageDevices.title}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {(manageDevices.devices || []).map((serial) => (
+                    <Badge
+                      key={serial}
+                      variant="secondary"
+                      className="cursor-pointer hover:bg-red-100"
+                      onClick={() => {
+                        const updated = {
+                          ...manageDevices,
+                          devices: manageDevices.devices.filter(s => s !== serial)
+                        };
+                        setManageDevices(updated);
+                      }}
+                    >
+                      {serial}
+                      <Trash2 className="w-3 h-3 mr-1" />
+                    </Badge>
+                  ))}
+                </div>
+                <ScrollArea className="h-96 border rounded-xl p-4">
+                  <div className="space-y-2">
+                    {devices.map((device) => {
+                      const isSelected = (manageDevices.devices || []).includes(device.serial_number);
+                      return (
+                        <div
+                          key={device.id}
+                          onClick={() => {
+                            const currentDevices = manageDevices.devices || [];
+                            const updated = {
+                              ...manageDevices,
+                              devices: isSelected
+                                ? currentDevices.filter(s => s !== device.serial_number)
+                                : [...currentDevices, device.serial_number]
+                            };
+                            setManageDevices(updated);
+                          }}
+                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                            isSelected ? 'bg-blue-50 border-2 border-blue-200' : 'hover:bg-slate-50 border-2 border-transparent'
+                          }`}
+                        >
+                          <Checkbox checked={isSelected} className="pointer-events-none" />
+                          <div className="flex-1">
+                            <p className="font-medium">{device.serial_number}</p>
+                            <p className="text-xs text-slate-500">{device.device_name || device.device_group}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+                <Button
+                  onClick={() => {
+                    updateMutation.mutate({ 
+                      id: manageDevices.id, 
+                      data: { devices: manageDevices.devices || [] }
+                    });
+                    setManageDevices(null);
+                    if (selectedCard?.id === manageDevices.id) {
+                      setSelectedCard(manageDevices);
+                    }
+                  }}
                   className="w-full"
                 >
                   שמור שינויים
