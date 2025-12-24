@@ -11,72 +11,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ArrowRight, Save, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-
-const CHECKLISTS = {
-  '710_no_amp': [
-    { id: 'visual', label: 'בדיקה ויזואלית (שברים/סדקים)' },
-    { id: 'connectors', label: 'תקינות מחברים' },
-    { id: 'battery', label: 'תקינות בית סוללה' },
-    { id: 'ptt', label: 'תקינות לחצן PTT' },
-    { id: 'audio', label: 'בדיקת שמע ודיבור' },
-  ],
-  '710_amp': [
-    { id: 'visual', label: 'בדיקה ויזואלית (שברים/סדקים)' },
-    { id: 'connectors', label: 'תקינות מחברים' },
-    { id: 'battery', label: 'תקינות בית סוללה' },
-    { id: 'ptt', label: 'תקינות לחצן PTT' },
-    { id: 'audio', label: 'בדיקת שמע ודיבור' },
-    { id: 'amp_conn', label: 'חיבור תקין למגבר' },
-    { id: 'amp_power', label: 'הספק שידור עם מגבר' },
-  ],
-  '711_no_amp': [
-    { id: 'visual', label: 'בדיקה ויזואלית' },
-    { id: 'display', label: 'תקינות צג' },
-    { id: 'keypad', label: 'תקינות מקשים' },
-    { id: 'audio', label: 'בדיקת שמע' },
-  ],
-  '711_amp': [
-    { id: 'visual', label: 'בדיקה ויזואלית' },
-    { id: 'display', label: 'תקינות צג' },
-    { id: 'keypad', label: 'תקינות מקשים' },
-    { id: 'audio', label: 'בדיקת שמע' },
-    { id: 'amp_check', label: 'בדיקת מגבר' },
-  ],
-  '713_no_amp': [
-    { id: 'visual', label: 'בדיקה ויזואלית' },
-    { id: 'switches', label: 'תקינות בוררים' },
-    { id: 'ant', label: 'תקינות אנטנה' },
-  ],
-  '713_amp': [
-    { id: 'visual', label: 'בדיקה ויזואלית' },
-    { id: 'switches', label: 'תקינות בוררים' },
-    { id: 'ant', label: 'תקינות אנטנה' },
-    { id: 'amp_integ', label: 'אינטגרציה עם מגבר' },
-  ],
-  'hargol_4200': [
-    { id: 'visual', label: 'בדיקה ויזואלית' },
-    { id: 'cables', label: 'תקינות כבלים' },
-    { id: 'gps', label: 'נעילת GPS' },
-    { id: 'comm', label: 'בדיקת תקשורת' },
-  ],
-  'hargol_4400': [
-    { id: 'visual', label: 'בדיקה ויזואלית' },
-    { id: 'cables', label: 'תקינות כבלים' },
-    { id: 'gps', label: 'נעילת GPS' },
-    { id: 'comm', label: 'בדיקת תקשורת' },
-    { id: 'wideband', label: 'בדיקת רחב סרט' },
-  ],
-  'elal': [
-    { id: 'visual', label: 'בדיקה ויזואלית' },
-    { id: 'leds', label: 'תקינות נוריות' },
-    { id: 'func', label: 'בדיקה פונקציונלית' },
-  ],
-  'lotus': [
-    { id: 'visual', label: 'בדיקה ויזואלית' },
-    { id: 'screen', label: 'תקינות מסך מגע' },
-    { id: 'app', label: 'עליית אפליקציה' },
-  ]
-};
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 export default function DeviceInspection() {
   const [searchParams] = useSearchParams();
@@ -91,19 +28,26 @@ export default function DeviceInspection() {
   const [remarks, setRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: device, isLoading } = useQuery({
+  // Fetch device
+  const { data: device, isLoading: isLoadingDevice } = useQuery({
     queryKey: ['device', serialNumber],
     queryFn: async () => {
-      // Use filter instead of list for searching by properties
       const res = await base44.entities.Device.filter({ serial_number: serialNumber });
       return res[0];
     },
     enabled: !!serialNumber,
   });
 
+  // Fetch user
   const { data: user } = useQuery({
     queryKey: ['user'],
     queryFn: () => base44.auth.me().catch(() => null),
+  });
+
+  // Fetch checklists
+  const { data: checklists = [], isLoading: isLoadingChecklists } = useQuery({
+    queryKey: ['checklists'],
+    queryFn: () => base44.entities.InspectionChecklist.list(),
   });
 
   const getDeviceChecklistType = () => {
@@ -112,39 +56,60 @@ export default function DeviceInspection() {
     // Automatic mapping where possible
     if (device.device_group === 'elal') return 'elal';
     if (device.device_group === 'lotus') return 'lotus';
+    if (device.device_group === 'hargol') return 'hargol'; 
     
-    // For others, we might need user input if not already selected
+    // For others, we need user input
     if (subtype) return subtype;
     
     return null;
   };
 
   const currentChecklistType = getDeviceChecklistType();
-  const currentChecklist = currentChecklistType ? CHECKLISTS[currentChecklistType] : [];
+  const currentChecklistObj = checklists.find(c => c.code === currentChecklistType);
+  const currentChecklistItems = currentChecklistObj?.items || [];
 
-  const handleToggle = (id) => {
+  const handleValueChange = (id, value) => {
     setChecklistData(prev => ({
       ...prev,
-      [id]: !prev[id]
+      [id]: value
     }));
   };
 
   const handleSubmit = async () => {
     if (!currentChecklistType) return;
     
+    // Validation
+    const missingFields = currentChecklistItems
+      .filter(item => item.required && !checklistData[item.id])
+      .map(item => item.label);
+      
+    if (missingFields.length > 0) {
+      toast.error(`אנא מלא את שדות החובה: ${missingFields.join(', ')}`);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Create inspection record
-      const passed = currentChecklist.every(item => checklistData[item.id]);
+      const allPassed = currentChecklistItems.every(item => {
+        if (item.type === 'checkbox' && item.required) return checklistData[item.id] === true;
+        if (item.required) return !!checklistData[item.id];
+        return true;
+      });
       
+      const resultsSummary = currentChecklistItems.map(item => {
+        let val = checklistData[item.id];
+        if (item.type === 'checkbox') val = val ? 'V' : 'X';
+        return `${item.label}: ${val}`;
+      }).join('\n');
+
       const inspectionData = {
-        inspection_number: Date.now(), // Simple ID generation
+        inspection_number: Date.now(),
         device_serial_numbers: [device.serial_number],
         soldier_name: user?.full_name || 'Anonymous',
-        profile: device.device_group === 'hargol' ? (subtype === 'hargol_4200' ? 'hargol_4200' : 'hargol_4400') : '710', // Default mapping
+        profile: currentChecklistType,
         inspection_date: new Date().toISOString(),
-        cavad_status: passed ? 'passed' : 'failed',
-        remarks: `סוג בדיקה: ${currentChecklistType}\n${remarks}\n\nתוצאות:\n${currentChecklist.map(item => `${item.label}: ${checklistData[item.id] ? 'V' : 'X'}`).join('\n')}`
+        cavad_status: allPassed ? 'passed' : 'failed',
+        remarks: `סוג בדיקה: ${currentChecklistObj?.name || currentChecklistType}\n${remarks}\n\nתוצאות:\n${resultsSummary}`
       };
 
       await base44.entities.Inspection.create(inspectionData);
@@ -157,7 +122,6 @@ export default function DeviceInspection() {
 
       toast.success('הבדיקה נשמרה בהצלחה');
       
-      // Navigate back
       if (source === 'special') navigate(createPageUrl('Special'));
       else if (source === 'routine') navigate(createPageUrl('Routine'));
       else navigate(createPageUrl('Home'));
@@ -170,7 +134,7 @@ export default function DeviceInspection() {
     }
   };
 
-  if (isLoading) {
+  if (isLoadingDevice || isLoadingChecklists) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -205,25 +169,6 @@ export default function DeviceInspection() {
         </div>
       );
     }
-
-    if (device.device_group === 'hargol') {
-      return (
-        <div className="space-y-4 mb-6">
-          <Label className="text-lg font-medium">בחר דגם:</Label>
-          <RadioGroup value={subtype} onValueChange={setSubtype} className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2 space-x-reverse border rounded-xl p-4 cursor-pointer hover:bg-slate-50 [&:has(:checked)]:bg-blue-50 [&:has(:checked)]:border-blue-200">
-              <RadioGroupItem value="hargol_4200" id="4200" />
-              <Label htmlFor="4200" className="cursor-pointer mr-2">4200</Label>
-            </div>
-            <div className="flex items-center space-x-2 space-x-reverse border rounded-xl p-4 cursor-pointer hover:bg-slate-50 [&:has(:checked)]:bg-blue-50 [&:has(:checked)]:border-blue-200">
-              <RadioGroupItem value="hargol_4400" id="4400" />
-              <Label htmlFor="4400" className="cursor-pointer mr-2">4400</Label>
-            </div>
-          </RadioGroup>
-        </div>
-      );
-    }
-
     return null;
   };
 
@@ -250,33 +195,76 @@ export default function DeviceInspection() {
                 <div className="bg-blue-50 p-4 rounded-xl mb-4 flex items-center gap-2 text-blue-800">
                   <CheckCircle2 className="w-5 h-5" />
                   <span className="font-medium">
-                    מבצע בדיקה עבור: {CHECKLISTS[currentChecklistType]?.[0]?.label ? subtype.replace('_', ' ') : device.device_group}
+                    מבצע בדיקה עבור: {currentChecklistObj?.name || device.device_group}
                   </span>
-                  <Button 
-                    variant="link" 
-                    size="sm" 
-                    onClick={() => setSubtype('')}
-                    className="mr-auto text-blue-600"
-                  >
-                    שנה
-                  </Button>
+                  {['710', '711', '713'].includes(device.device_group) && (
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      onClick={() => setSubtype('')}
+                      className="mr-auto text-blue-600"
+                    >
+                      שנה
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-4">
-                  {currentChecklist.map((item) => (
+                  {currentChecklistItems.length === 0 && (
+                     <div className="text-center p-4 text-slate-500 border border-dashed rounded-xl">
+                       לא הוגדרו סעיפי בדיקה לרשימה זו.
+                       <br/>
+                       אנא פנה למנהל המערכת להגדרת רשימת הבדיקה.
+                     </div>
+                  )}
+                  {currentChecklistItems.map((item) => (
                     <div 
                       key={item.id}
-                      className="flex items-center space-x-3 space-x-reverse p-4 bg-white border rounded-xl hover:bg-slate-50 transition-colors"
-                      onClick={() => handleToggle(item.id)}
+                      className="p-4 bg-white border rounded-xl hover:bg-slate-50 transition-colors"
                     >
-                      <Checkbox 
-                        checked={checklistData[item.id] || false}
-                        onCheckedChange={() => handleToggle(item.id)}
-                        id={item.id}
-                      />
-                      <Label htmlFor={item.id} className="cursor-pointer mr-3 flex-1">
-                        {item.label}
-                      </Label>
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className={`font-medium ${item.required ? 'after:content-["*"] after:text-red-500 after:mr-1' : ''}`}>
+                          {item.label}
+                        </Label>
+                      </div>
+
+                      {item.type === 'checkbox' && (
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <Switch
+                            checked={checklistData[item.id] || false}
+                            onCheckedChange={(checked) => handleValueChange(item.id, checked)}
+                            id={item.id}
+                          />
+                          <Label htmlFor={item.id} className="cursor-pointer text-sm text-slate-500">
+                            {checklistData[item.id] ? 'תקין' : 'לא תקין / לא נבדק'}
+                          </Label>
+                        </div>
+                      )}
+
+                      {item.type === 'text' && (
+                        <Input 
+                          value={checklistData[item.id] || ''}
+                          onChange={(e) => handleValueChange(item.id, e.target.value)}
+                          placeholder="הזן טקסט..."
+                          className="bg-white"
+                        />
+                      )}
+
+                      {item.type === 'select' && (
+                        <Select 
+                          value={checklistData[item.id]} 
+                          onValueChange={(val) => handleValueChange(item.id, val)}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="בחר אפשרות" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(item.options || []).map(opt => (
+                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -294,7 +282,7 @@ export default function DeviceInspection() {
                 <Button 
                   className="w-full h-12 text-lg mt-6 bg-emerald-600 hover:bg-emerald-700"
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !currentChecklist.length}
+                  disabled={isSubmitting || currentChecklistItems.length === 0}
                 >
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                     <>
