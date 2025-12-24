@@ -83,15 +83,24 @@ export default function HardwareSection({ data, onChange }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+        <div className="space-y-2">
           <Label className="flex items-center gap-2 text-slate-700">
             <Lock className="w-4 h-4" />
             מצב איטום
           </Label>
-          <Switch
-            checked={data.sealing_status || false}
-            onCheckedChange={(v) => handleChange('sealing_status', v)}
-          />
+          <Select
+            value={data.sealing_status || ''}
+            onValueChange={(v) => handleChange('sealing_status', v)}
+          >
+            <SelectTrigger className="h-12 rounded-xl">
+              <SelectValue placeholder="בחר מצב" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="passed">עבר</SelectItem>
+              <SelectItem value="not_passed">לא עבר</SelectItem>
+              <SelectItem value="not_required">לא נדרש</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
