@@ -94,7 +94,8 @@ export default function DeviceInspection() {
   const { data: device, isLoading } = useQuery({
     queryKey: ['device', serialNumber],
     queryFn: async () => {
-      const res = await base44.entities.Device.list({ serial_number: serialNumber });
+      // Use filter instead of list for searching by properties
+      const res = await base44.entities.Device.filter({ serial_number: serialNumber });
       return res[0];
     },
     enabled: !!serialNumber,
