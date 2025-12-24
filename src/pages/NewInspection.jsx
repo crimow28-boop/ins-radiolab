@@ -195,13 +195,14 @@ export default function NewInspection() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-slate-700">
                     <User className="w-4 h-4" />
-                    שם החייל
+                    שם המבצע
                   </Label>
                   <Input
                     value={formData.soldier_name}
                     onChange={(e) => updateFormData({ soldier_name: e.target.value })}
-                    placeholder="הזן שם חייל"
-                    className="h-12 rounded-xl"
+                    placeholder="שם המבצע"
+                    className="h-12 rounded-xl bg-slate-50"
+                    disabled
                   />
                 </div>
 
