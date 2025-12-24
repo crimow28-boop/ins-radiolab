@@ -191,22 +191,7 @@ export default function NewInspection() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-slate-700">פרופיל בדיקה</Label>
-                  <Select
-                    value={formData.profile}
-                    onValueChange={(v) => updateFormData({ profile: v })}
-                  >
-                    <SelectTrigger className="h-12 rounded-xl">
-                      <SelectValue placeholder="בחר פרופיל" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PROFILES.map(p => (
-                        <SelectItem key={p.code} value={p.code}>{p.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+
               </CardContent>
             </Card>
 
