@@ -14,8 +14,9 @@ import {
   TrendingUp,
   CheckCircle,
   ArrowLeft,
-  Activity } from
-'lucide-react';
+  Activity,
+  Settings } from
+  'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { subDays, format } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -153,7 +154,15 @@ export default function Home() {
         <Card className="bg-white border-0 shadow-lg mt-6">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-800">בדיקות אחרונות</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-slate-800">בדיקות אחרונות</h3>
+                <Link to={createPageUrl('ChecklistManager')}>
+                  <Button variant="ghost" size="sm" className="rounded-full hover:bg-blue-50 text-blue-600">
+                    <Settings className="w-4 h-4 ml-1" />
+                    ניהול רשימות
+                  </Button>
+                </Link>
+              </div>
               <Link to={createPageUrl('InspectionHistory')}>
                 <Button variant="outline" size="sm" className="rounded-full hover:bg-slate-50">
                   צפה בהכל
