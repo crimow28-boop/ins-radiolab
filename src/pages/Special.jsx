@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DeviceManager from '../components/DeviceManager';
 
 export default function Special() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [managerMode, setManagerMode] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -79,7 +81,7 @@ export default function Special() {
                     onClick={() => {
                       if (!managerMode) {
                         // Navigate to checklist
-                        window.location.href = createPageUrl(`DeviceInspection?serial=${serial}&source=special`);
+                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=special`));
                       }
                     }}
                     className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 text-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
