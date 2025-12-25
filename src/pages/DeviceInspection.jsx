@@ -126,7 +126,7 @@ export default function DeviceInspection() {
       
       const inspectionData = {
         device_serial_numbers: [device.serial_number],
-        soldier_name: user?.full_name || 'Anonymous',
+        soldier_name: user?.display_name || user?.full_name || 'Anonymous',
         profile: currentChecklistType,
         inspection_date: new Date().toISOString(),
         status: 'draft',
