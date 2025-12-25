@@ -55,9 +55,10 @@ export default function Users() {
   
   const updateUserMutation = useMutation({
     mutationFn: async (data) => {
-       // Separate updates if needed, but usually one call works if fields are supported
+       // We update display_name for the name, and role.
+       // We only send the fields we want to update.
        return base44.entities.User.update(data.id, {
-         full_name: data.full_name,
+         display_name: data.display_name,
          role: data.role
        });
     },
@@ -148,11 +149,11 @@ export default function Users() {
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label>שם מלא</Label>
+                  <Label>שם לתצוגה</Label>
                   <Input 
-                    value={editingUser?.full_name || ''} 
-                    onChange={(e) => setEditingUser({...editingUser, full_name: e.target.value})}
-                    placeholder="שם מלא"
+                    value={editingUser?.display_name || editingUser?.full_name || ''} 
+                    onChange={(e) => setEditingUser({...editingUser, display_name: e.target.value})}
+                    placeholder="שם לתצוגה"
                   />
                 </div>
                 <div className="space-y-2">
@@ -192,7 +193,7 @@ export default function Users() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">שם מלא</TableHead>
+                    <TableHead className="text-right">שם</TableHead>
                     <TableHead className="text-right">אימייל</TableHead>
                     <TableHead className="text-right">תפקיד</TableHead>
                     <TableHead className="text-right">תאריך הצטרפות</TableHead>
@@ -203,7 +204,7 @@ export default function Users() {
                   {users.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">
-                        {user.full_name || 'לא הוגדר'}
+                        {user.display_name || user.full_name || 'לא הוגדר'}
                       </TableCell>
                       <TableCell className="font-mono text-sm text-slate-500">
                         {user.email}
