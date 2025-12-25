@@ -529,10 +529,39 @@ export default function ChecklistManager() {
                                       {/* Sub-items Section */}
                                       {(item.type === 'checkbox' || item.type === 'select') && (
                                         <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
-                                          <div className="flex items-center justify-between mb-2">
-                                            <Label className="text-xs font-semibold text-red-800">
-                                              {item.type === 'checkbox' ? 'אם סומן "לא תקין" (X):' : 'אם סומן "נכשל":'}
-                                            </Label>
+                                          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                                            <div className="flex items-center gap-2">
+                                              <Label className="text-xs font-semibold text-red-800">
+                                                הצג תנאים כאשר:
+                                              </Label>
+                                              <Select
+                                                value={item.conditionValue !== undefined ? String(item.conditionValue) : (item.type === 'checkbox' ? 'false' : 'נכשל')}
+                                                onValueChange={(val) => {
+                                                  const finalVal = item.type === 'checkbox' ? (val === 'true') : val;
+                                                  handleUpdateItem(index, 'conditionValue', finalVal);
+                                                }}
+                                              >
+                                                <SelectTrigger className="h-7 text-xs min-w-[100px] bg-white border-red-200 text-red-900">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {item.type === 'checkbox' ? (
+                                                    <>
+                                                      <SelectItem value="false">לא תקין (X)</SelectItem>
+                                                      <SelectItem value="true">תקין (V)</SelectItem>
+                                                    </>
+                                                  ) : (
+                                                    <>
+                                                      <SelectItem value="נכשל">נכשל</SelectItem>
+                                                      {/* Add other options from the item options string */}
+                                                      {typeof item.options === 'string' && item.options.split(',').map(o => o.trim()).filter(o => o && o !== 'נכשל').map(opt => (
+                                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                                      ))}
+                                                    </>
+                                                  )}
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
                                             <Button 
                                               variant="ghost" 
                                               size="sm" 
