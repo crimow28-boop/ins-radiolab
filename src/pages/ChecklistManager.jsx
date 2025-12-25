@@ -572,7 +572,7 @@ export default function ChecklistManager() {
                                                             value={subItem.options || ''}
                                                             onChange={(e) => handleUpdateSubItem(index, subIndex, 'options', e.target.value)}
                                                             placeholder="אפשרויות..."
-                                                            className="h-8 text-sm flex-1"
+                                                            className="h-8 text-sm flex-1 text-right"
                                                           />
                                                         )}
                                                       </div>
