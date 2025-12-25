@@ -482,6 +482,7 @@ export default function ChecklistManager() {
                                             value={item.label}
                                             onChange={(e) => handleUpdateItem(index, 'label', e.target.value)}
                                             placeholder="לדוגמה: תקינות מסך"
+                                            className="text-right"
                                           />
                                         </div>
                                         <div className="w-48">
