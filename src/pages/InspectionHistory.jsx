@@ -65,6 +65,32 @@ export default function InspectionHistory() {
     onError: () => toast.error('שגיאה במחיקת הבדיקות')
   });
 
+  const deleteInspectionMutation = useMutation({
+    mutationFn: (id) => base44.entities.Inspection.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inspections'] });
+      toast.success('הבדיקה נמחקה בהצלחה');
+      setSelectedInspection(null);
+    },
+    onError: () => toast.error('שגיאה במחיקת הבדיקה')
+  });
+
+  const deleteCardMutation = useMutation({
+    mutationFn: async ({ id, type }) => {
+      if (type === 'routine') {
+        await base44.entities.RoutineCard.delete(id);
+      } else {
+        await base44.entities.SpecialCard.delete(id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['routineCards_history'] });
+      queryClient.invalidateQueries({ queryKey: ['specialCards_history'] });
+      toast.success('הכרטיס נמחק בהצלחה');
+    },
+    onError: () => toast.error('שגיאה במחיקת הכרטיס')
+  });
+
   // Group cards
   const allCards = useMemo(() => {
     return [
