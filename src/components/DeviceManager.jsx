@@ -53,16 +53,7 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={selectAllFiltered}
-            className="flex-shrink-0 rounded-full border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
-          >
-            <CheckCheck className="w-4 h-4 ml-1" />
-            בחר הכל ({filteredDevices.length})
-          </Button>
+
           <Button
             type="button"
             variant="outline"
