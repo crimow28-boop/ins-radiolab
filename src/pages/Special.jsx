@@ -57,13 +57,9 @@ export default function Special() {
     enabled: !!(user?.role === 'admin') // Only fetch if admin/manager
   });
 
-  const getDeviceProgress = (serial, cardId) => {
-    // Find latest inspection (draft or completed) for this specific card
-    const deviceInspections = inspections.filter(i => 
-      i.device_serial_numbers?.includes(serial) && 
-      (cardId ? i.card_id === cardId : true)
-    );
-    
+  const getDeviceProgress = (serial) => {
+    // Find latest inspection (draft or completed)
+    const deviceInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
     if (!deviceInspections.length) return { status: 'none', progress: 0 };
     
     // Check for draft
@@ -119,7 +115,7 @@ export default function Special() {
   if (selectedCard) {
     const cardDevices = selectedCard.devices || [];
     const allCompleted = cardDevices.length > 0 && cardDevices.every(serial => {
-       const { status } = getDeviceProgress(serial, selectedCard.id);
+       const { status } = getDeviceProgress(serial);
        return status === 'completed';
     });
 
@@ -143,7 +139,7 @@ export default function Special() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-4">
               {cardDevices.map((serial) => {
-                const { status, progress } = getDeviceProgress(serial, selectedCard.id);
+                const { status, progress } = getDeviceProgress(serial);
                 const isCompleted = status === 'completed';
                 const isDraft = status === 'draft';
                 
@@ -152,7 +148,7 @@ export default function Special() {
                     key={serial} 
                     onClick={() => {
                       if (!managerMode) {
-                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=special&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
+                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=special`));
                       }
                     }}
                     className={`p-4 border border-slate-400 flex flex-col items-center justify-center gap-2 text-center shadow-sm cursor-pointer hover:bg-slate-50 ${
@@ -380,7 +376,7 @@ export default function Special() {
                        {chunk(card.devices, 10).map((deviceChunk, idx) => (
                          <div key={idx} className="flex gap-1 h-1.5 justify-center w-full">
                            {deviceChunk.map(d => {
-                             const { status } = getDeviceProgress(d, card.id);
+                             const { status } = getDeviceProgress(d);
                              return (
                                <div key={d} className={`flex-1 ${
                                  status === 'completed' ? 'bg-emerald-500' : 
