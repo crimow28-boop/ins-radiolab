@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowRight, Save, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { ArrowRight, Save, CheckCircle2, AlertTriangle, Loader2, Check, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
@@ -174,15 +174,32 @@ export default function DeviceInspection() {
         </div>
 
         {item.type === 'checkbox' && (
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <Switch
-              checked={checklistData[item.id] || false}
-              onCheckedChange={(checked) => handleValueChange(item.id, checked)}
-              id={item.id}
-            />
-            <Label htmlFor={item.id} className="cursor-pointer text-sm text-slate-500">
-              {checklistData[item.id] ? 'תקין' : 'לא תקין / לא נבדק'}
-            </Label>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => handleValueChange(item.id, true)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
+                checklistData[item.id] === true
+                  ? 'bg-emerald-100 border-emerald-500 text-emerald-700 font-medium ring-1 ring-emerald-500'
+                  : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+              }`}
+            >
+              <Check className={`w-5 h-5 ${checklistData[item.id] === true ? 'text-emerald-600' : 'text-slate-400'}`} />
+              <span>תקין</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleValueChange(item.id, false)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
+                checklistData[item.id] === false
+                  ? 'bg-red-100 border-red-500 text-red-700 font-medium ring-1 ring-red-500'
+                  : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+              }`}
+            >
+              <X className={`w-5 h-5 ${checklistData[item.id] === false ? 'text-red-600' : 'text-slate-400'}`} />
+              <span>לא תקין</span>
+            </button>
           </div>
         )}
 

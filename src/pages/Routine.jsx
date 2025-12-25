@@ -8,11 +8,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, ArrowRight, Settings as SettingsIcon, CheckCircle, XCircle, MinusCircle, Radio, Trash2 } from 'lucide-react';
+import { Plus, Edit, ArrowRight, Settings as SettingsIcon, Radio, CheckCircle, XCircle, Shield } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
+import { motion, AnimatePresence } from 'framer-motion';
 import DeviceManager from '../components/DeviceManager';
+import { chunk } from 'lodash';
+import { toast } from 'sonner';
 
 export default function Routine() {
   const navigate = useNavigate();
@@ -23,6 +25,13 @@ export default function Routine() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newCard, setNewCard] = useState({ title: '', description: '' });
   const [manageDevices, setManageDevices] = useState(null);
+  const [pinCode, setPinCode] = useState('');
+  const [pinError, setPinError] = useState(false);
+
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: () => base44.auth.me().catch(() => null),
+  });
 
   const { data: cards = [] } = useQuery({
     queryKey: ['routineCards'],
@@ -33,6 +42,36 @@ export default function Routine() {
     queryKey: ['devices'],
     queryFn: () => base44.entities.Device.list(),
   });
+  
+  const { data: inspections = [] } = useQuery({
+    queryKey: ['inspections_summary'],
+    queryFn: () => base44.entities.Inspection.list(), // We fetch all for simplicity, or filter by source if possible
+  });
+  
+  const { data: pinSettings, refetch: refetchPin } = useQuery({
+    queryKey: ['system_settings_pin'],
+    queryFn: async () => {
+       const res = await base44.entities.SystemSettings.filter({ key: 'manager_pin' });
+       return res[0];
+    },
+    enabled: !!(user?.role === 'admin') // Only fetch if admin/manager
+  });
+
+  const getDeviceProgress = (serial) => {
+    // Find latest inspection (draft or completed)
+    const deviceInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
+    if (!deviceInspections.length) return { status: 'none', progress: 0 };
+    
+    // Check for draft
+    const draft = deviceInspections.find(i => i.status === 'draft');
+    if (draft) return { status: 'draft', progress: draft.progress || 0 };
+    
+    // Check for completed
+    const completed = deviceInspections.filter(i => i.status === 'completed' || !i.status); // Backwards compat
+    if (completed.length > 0) return { status: 'completed', progress: 100 };
+    
+    return { status: 'none', progress: 0 };
+  };
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.RoutineCard.create(data),
@@ -51,36 +90,42 @@ export default function Routine() {
     },
   });
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'passed':
-        return <CheckCircle className="w-6 h-6 text-green-600" />;
-      case 'failed':
-        return <XCircle className="w-6 h-6 text-red-600" />;
-      default:
-        return <MinusCircle className="w-6 h-6 text-slate-400" />;
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'passed':
-        return 'עבר';
-      case 'failed':
-        return 'נכשל';
-      default:
-        return 'לא בוצע';
+  const handlePinSubmit = async () => {
+    // Verify PIN
+    const res = await base44.entities.SystemSettings.filter({ key: 'manager_pin', value: pinCode });
+    if (res.length > 0) {
+      // Correct PIN
+      toast.success("אושר בהצלחה");
+      setPinError(false);
+      
+      // Rotate PIN
+      const newPin = Math.floor(1000 + Math.random() * 9000).toString();
+      await base44.entities.SystemSettings.update(res[0].id, { value: newPin });
+      refetchPin();
+      setPinCode('');
+      
+      // Here you might want to mark the card as "Approved" in the database
+      // For now we just show success
+    } else {
+      setPinError(true);
+      toast.error("קוד שגוי");
     }
   };
 
   if (selectedCard) {
+    const cardDevices = selectedCard.devices || [];
+    const allCompleted = cardDevices.length > 0 && cardDevices.every(serial => {
+       const { status } = getDeviceProgress(serial);
+       return status === 'completed';
+    });
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6" dir="rtl">
+      <div className="min-h-screen bg-slate-100 p-6" dir="rtl">
         <div className="max-w-7xl mx-auto">
           <Button
             variant="ghost"
             onClick={() => setSelectedCard(null)}
-            className="mb-6"
+            className="mb-6 rounded-none hover:bg-slate-200"
           >
             <ArrowRight className="w-4 h-4 ml-2" />
             חזרה
@@ -92,11 +137,11 @@ export default function Routine() {
               <p className="text-slate-500 mt-1">{selectedCard.description}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              {(selectedCard.devices || []).map((serial) => {
-                const device = devices.find(d => d.serial_number === serial);
-                // לוגיקה פשוטה לבדיקת סטטוס - ירוק אם יש בדיקות
-                const isCompleted = (device?.total_inspections || 0) > 0;
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-4">
+              {cardDevices.map((serial) => {
+                const { status, progress } = getDeviceProgress(serial);
+                const isCompleted = status === 'completed';
+                const isDraft = status === 'draft';
                 
                 return (
                   <div 
@@ -106,26 +151,33 @@ export default function Routine() {
                         navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=routine`));
                       }
                     }}
-                    className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 text-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                      isCompleted 
-                        ? 'bg-emerald-50 border-emerald-100 hover:shadow-emerald-100' 
-                        : 'bg-red-50 border-red-100 hover:shadow-red-100'
+                    className={`p-4 border border-slate-400 flex flex-col items-center justify-center gap-2 text-center shadow-sm cursor-pointer hover:bg-slate-50 ${
+                      isCompleted ? 'bg-emerald-50' : 'bg-white'
                     }`}
                   >
                     <span className="font-mono font-bold text-lg text-slate-800">{serial}</span>
+                    
+                    <div className="w-full bg-slate-200 h-2 mt-1">
+                      <div 
+                        className={`h-2 transition-all ${isCompleted ? 'bg-emerald-500' : 'bg-blue-500'}`} 
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                    
                     <div className={`flex items-center gap-1 text-xs font-medium ${
-                      isCompleted ? 'text-emerald-600' : 'text-red-500'
+                      isCompleted ? 'text-emerald-700' : (isDraft ? 'text-blue-700' : 'text-slate-500')
                     }`}>
                       {isCompleted ? (
                         <>
                           <CheckCircle className="w-3 h-3" />
                           <span>הושלם</span>
                         </>
-                      ) : (
+                      ) : isDraft ? (
                         <>
-                          <XCircle className="w-3 h-3" />
-                          <span>לביצוע</span>
+                           <span>בתהליך {progress}%</span>
                         </>
+                      ) : (
+                        <span>לביצוע</span>
                       )}
                     </div>
                   </div>
@@ -135,14 +187,46 @@ export default function Routine() {
               <Button
                 variant="outline"
                 onClick={() => setManageDevices(selectedCard)}
-                className="h-auto min-h-[80px] rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 flex flex-col gap-2"
+                className="h-full min-h-[100px] border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-600 flex flex-col gap-2 rounded-none"
               >
-                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                  <Plus className="w-5 h-5 text-blue-600" />
-                </div>
-                <span className="font-medium">הוסף</span>
+                <Plus className="w-5 h-5" />
+                <span className="font-medium">הוסף מכשיר</span>
               </Button>
             </div>
+
+            {/* Manager Approval Section */}
+            {allCompleted && (
+               <div className="mt-12 p-6 bg-white border border-slate-400 max-w-md mx-auto text-center">
+                 <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2">
+                   <Shield className="w-5 h-5 text-blue-900" />
+                   אישור נגד / מנהל
+                 </h3>
+                 <p className="text-sm text-slate-500 mb-4">כל המכשירים בכרטיס זה נבדקו. נדרש אישור מנהל.</p>
+                 
+                 {user?.role === 'admin' && pinSettings && (
+                   <div className="mb-4 p-2 bg-blue-50 text-blue-800 text-sm font-mono border border-blue-200">
+                     קוד נוכחי (למנהל בלבד): {pinSettings.value}
+                   </div>
+                 )}
+
+                 <div className="flex gap-2 justify-center">
+                   <Input 
+                      type="password" 
+                      maxLength={4}
+                      className="w-32 text-center text-lg tracking-widest rounded-none border-slate-400"
+                      placeholder="PIN"
+                      value={pinCode}
+                      onChange={(e) => setPinCode(e.target.value)}
+                   />
+                   <Button 
+                     onClick={handlePinSubmit}
+                     className="bg-blue-900 hover:bg-blue-800 rounded-none"
+                   >
+                     אשר
+                   </Button>
+                 </div>
+               </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -154,10 +238,11 @@ export default function Routine() {
                 transition={{ delay: idx * 0.05 }}
               >
                 <Card className="cursor-pointer hover:shadow-lg transition-all border-2 hover:border-blue-400">
-                  <CardContent className="p-6 text-center space-y-3">
-                    {getStatusIcon(sub.status)}
+                  <CardContent className="p-6 text-center">
                     <h3 className="font-semibold text-slate-800">{sub.title}</h3>
-                    <Badge variant="outline">{getStatusLabel(sub.status)}</Badge>
+                    {sub.status && (
+                      <p className="text-xs text-slate-500 mt-2">{sub.status}</p>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -234,7 +319,7 @@ export default function Routine() {
                       <Textarea
                         value={newCard.description}
                         onChange={(e) => setNewCard({ ...newCard, description: e.target.value })}
-                        placeholder="תיאור"
+                        placeholder="תיאור חופשי"
                       />
                     </div>
                     <Button
@@ -251,7 +336,7 @@ export default function Routine() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {cards.map((card, index) => (
             <motion.div
               key={card.id}
@@ -259,13 +344,12 @@ export default function Routine() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card
-                className={`cursor-pointer hover:shadow-xl transition-all h-48 relative group ${
-                  managerMode ? 'border-2 border-amber-200' : ''
+              <div
+                className={`cursor-pointer bg-white border border-slate-400 h-40 relative group hover:bg-blue-50 transition-colors p-6 flex flex-col justify-center items-center text-center ${
+                  managerMode ? 'border-amber-400 border-2' : ''
                 }`}
                 onClick={() => !managerMode && setSelectedCard(card)}
               >
-                <CardContent className="p-6 h-full flex flex-col justify-center">
                   {managerMode && (
                     <Button
                       variant="ghost"
@@ -279,17 +363,35 @@ export default function Routine() {
                       <Edit className="w-4 h-4" />
                     </Button>
                   )}
-                  <h2 className="text-2xl font-bold text-slate-800 mb-2 text-center">
+                  <h2 className="text-xl font-bold text-slate-800 mb-2">
                     {card.title}
                   </h2>
-                  <p className="text-slate-600 text-center text-sm line-clamp-3">
+                  <p className="text-slate-600 text-sm line-clamp-2">
                     {card.description}
                   </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+
+                  {/* Summary Progress */}
+                  {card.devices?.length > 0 && (
+                    <div className="w-full mt-4 flex flex-col gap-1">
+                       {chunk(card.devices, 10).map((deviceChunk, idx) => (
+                         <div key={idx} className="flex gap-1 h-1.5 justify-center w-full">
+                           {deviceChunk.map(d => {
+                             const { status } = getDeviceProgress(d);
+                             return (
+                               <div key={d} className={`flex-1 ${
+                                 status === 'completed' ? 'bg-emerald-500' : 
+                                 status === 'draft' ? 'bg-blue-400' : 'bg-slate-200'
+                               }`}></div>
+                             )
+                           })}
+                         </div>
+                       ))}
+                    </div>
+                  )}
+                  </div>
+                  </motion.div>
+                  ))}
+                  </div>
 
         {editingCard && (
           <Dialog open={!!editingCard} onOpenChange={() => setEditingCard(null)}>
