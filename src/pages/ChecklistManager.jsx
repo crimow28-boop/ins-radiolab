@@ -95,10 +95,12 @@ const PREDEFINED_ITEMS = [
   { label: 'אנטנה', type: 'select', options: 'תקין, לא תקין, חסר' },
   { label: 'מער״ש', type: 'select', options: 'תקין, לא תקין, חסר' },
   { label: 'צב"ד', type: 'special_tzabad' }, // Marker type
-  { label: 'הצפנה', type: 'checkbox' },
+  { label: 'הצפנות', type: 'checkbox' },
   { label: 'תדרים', type: 'checkbox' },
+  { label: 'סגירת שקע צד', type: 'checkbox' },
   { label: 'בדיקות קשר', type: 'checkbox' },
   { label: 'החלפת סוללה', type: 'checkbox' },
+  { label: 'אנטנות', type: 'checkbox' },
   { label: 'אטימות', type: 'checkbox' },
   { label: 'ציוד נוסף', type: 'text' },
   { label: 'הערות', type: 'text' }
