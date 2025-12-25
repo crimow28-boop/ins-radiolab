@@ -107,6 +107,59 @@ export default function DeviceInspection() {
     }));
   };
 
+  const calculateProgress = () => {
+    if (!currentChecklistItems.length) return 0;
+    const answeredCount = currentChecklistItems.filter(item => {
+      const val = checklistData[item.id];
+      if (item.type === 'checkbox') return val === true;
+      return !!val;
+    }).length;
+    return Math.round((answeredCount / currentChecklistItems.length) * 100);
+  };
+
+  const handleSaveDraft = async (exit = false) => {
+    if (!currentChecklistType) return;
+    
+    setIsSubmitting(true);
+    try {
+      const progress = calculateProgress();
+      
+      const inspectionData = {
+        device_serial_numbers: [device.serial_number],
+        soldier_name: user?.full_name || 'Anonymous',
+        profile: currentChecklistType,
+        inspection_date: new Date().toISOString(),
+        status: 'draft',
+        progress: progress,
+        checklist_answers: JSON.stringify(checklistData),
+        remarks: remarks
+      };
+
+      if (draftId) {
+        await base44.entities.Inspection.update(draftId, inspectionData);
+      } else {
+        const newDraft = await base44.entities.Inspection.create({
+          ...inspectionData,
+          inspection_number: Date.now()
+        });
+        setDraftId(newDraft.id);
+      }
+
+      toast.success('טיוטה נשמרה');
+      
+      if (exit) {
+        if (source === 'special') navigate(createPageUrl('Special'));
+        else if (source === 'routine') navigate(createPageUrl('Routine'));
+        else navigate(createPageUrl('Home'));
+      }
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      toast.error('שגיאה בשמירת טיוטה');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!currentChecklistType) return;
     
@@ -141,10 +194,17 @@ export default function DeviceInspection() {
         profile: currentChecklistType,
         inspection_date: new Date().toISOString(),
         cavad_status: allPassed ? 'passed' : 'failed',
-        remarks: `סוג בדיקה: ${currentChecklistObj?.name || currentChecklistType}\n${remarks}\n\nתוצאות:\n${resultsSummary}`
+        remarks: `סוג בדיקה: ${currentChecklistObj?.name || currentChecklistType}\n${remarks}\n\nתוצאות:\n${resultsSummary}`,
+        status: 'completed',
+        progress: 100,
+        checklist_answers: JSON.stringify(checklistData)
       };
 
-      await base44.entities.Inspection.create(inspectionData);
+      if (draftId) {
+        await base44.entities.Inspection.update(draftId, inspectionData);
+      } else {
+        await base44.entities.Inspection.create(inspectionData);
+      }
 
       // Update device stats
       await base44.entities.Device.update(device.id, {
