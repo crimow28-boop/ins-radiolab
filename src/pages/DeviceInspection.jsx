@@ -289,9 +289,13 @@ export default function DeviceInspection() {
       }
 
       // Update device stats
+      const encryptionItem = currentChecklistItems.find(i => i.label.includes('הצפנה') || i.label.includes('הצפנות'));
+      const isEncrypted = encryptionItem && checklistData[encryptionItem.id] === true;
+
       await base44.entities.Device.update(device.id, {
         total_inspections: (device.total_inspections || 0) + 1,
-        last_inspection_date: new Date().toISOString().split('T')[0]
+        last_inspection_date: new Date().toISOString().split('T')[0],
+        ...(isEncrypted ? { encryption_status: 'encrypted' } : {})
       });
 
       toast.success('הבדיקה נשמרה בהצלחה');
