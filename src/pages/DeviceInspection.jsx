@@ -246,10 +246,97 @@ export default function DeviceInspection() {
     if (!currentChecklistType) return;
     
     // Validation
-    const missingFields = currentChecklistItems
-      .filter(item => item.required && !checklistData[item.id])
-      .map(item => item.label);
-      
+    const collectMissingFields = (items) => {
+       let missing = [];
+       items.forEach(item => {
+           const val = checklistData[item.id];
+
+           // Check if item is required and empty
+           // For checkbox: required means it must be checked (true)? 
+           // Actually in previous logic: if (item.required && !checklistData[item.id])
+           // This implies checkbox must be true if required.
+           // But wait, if I mark "Not OK", it is false. 
+           // If a checkbox is required, does it mean "Must be OK"? 
+           // In the renderItem for checkbox:
+           // <button ... onClick={() => handleValueChange(item.id, true)}>...
+           // <button ... onClick={() => handleValueChange(item.id, false)}>...
+           // checklistData[item.id] is boolean.
+           // If required=true, validation fails if value is false/undefined.
+           // This forces the user to mark it as "OK" to pass validation?
+           // Or just to answer it?
+           // The previous code: .filter(item => item.required && !checklistData[item.id])
+           // If I answer "false" (Not OK), !false is true => missing.
+           // So yes, previously "required" meant "Must be OK".
+           // BUT, for text/select, it means "Must have value".
+
+           // However, for sub-items (text inputs mostly), we just want them to be filled.
+           // Let's stick to "has value" for non-checkbox, and "true" for checkbox?
+           // Wait, if I have a checklist item "Screen", and I mark it "Not OK", I am forced to fill sub-items.
+           // But the main item "Screen" is "Not OK". If "Screen" is required, I cannot submit "Not OK"?
+           // That seems strict. Maybe "required" for checkbox means "Must be answered"?
+           // But checklistData[item.id] is undefined if not answered?
+           // Let's check handleValueChange.
+
+           // If I haven't clicked anything, checklistData[item.id] is undefined.
+           // If I click "Not OK", it becomes false.
+           // If I click "OK", it becomes true.
+
+           // Previous validation: !checklistData[item.id]
+           // If undefined -> !undefined -> true (Missing)
+           // If false -> !false -> true (Missing!) -> This means you CANNOT submit a failure for a required field?
+           // That sounds wrong for an inspection app. You should be able to report failures.
+           // But maybe "required" implies "Must be passed" for the main checklist?
+           // Or maybe the previous code was buggy/strict.
+
+           // Let's assume for now we want to check if it has a value (defined).
+           // But !false is true.
+           // If I change it to `checklistData[item.id] === undefined`, then "Not OK" (false) is valid.
+           // BUT, `!checklistData[item.id]` was the code.
+           // If the intention of "required" on a checkbox is "Must be Pass", then OK.
+           // If the intention is "Must be answered", then the previous code was blocking "Not OK".
+
+           // Let's look at renderItem logic for checkbox:
+           /*
+            <button ... onClick={() => handleValueChange(item.id, true)} ... >תקין</button>
+            <button ... onClick={() => handleValueChange(item.id, false)} ... >לא תקין</button>
+           */
+           // If I click "Not OK", value is `false`.
+
+           // Let's refine validation to:
+           // 1. If checkbox: must be not undefined (must be answered).
+           // 2. If text/select: must be truthy (not empty string).
+
+           // BUT I should be careful not to break existing behavior if "Must be Pass" was intended.
+           // Given it's an inspection, usually you record failures. So blocking "Not OK" seems wrong.
+           // I will assume "Required" means "Must be answered".
+
+           const isDefined = val !== undefined && val !== null && val !== '';
+           const isCheckbox = item.type === 'checkbox';
+
+           // If it is a checkbox, we accept true or false. undefined is missing.
+           // If it is text/select, we need a value.
+
+           if (item.required) {
+               if (isCheckbox) {
+                   if (val === undefined) missing.push(item.label);
+               } else {
+                   if (!val) missing.push(item.label);
+               }
+           }
+
+           // Check sub-items if condition is met
+           const conditionVal = item.conditionValue !== undefined ? item.conditionValue : (item.type === 'checkbox' ? false : 'נכשל');
+           const isMatch = val === conditionVal;
+
+           if (isMatch && item.subItems && item.subItems.length > 0) {
+               missing = [...missing, ...collectMissingFields(item.subItems)];
+           }
+       });
+       return missing;
+    };
+
+    const missingFields = collectMissingFields(currentChecklistItems);
+
     if (missingFields.length > 0) {
       toast.error(`אנא מלא את שדות החובה: ${missingFields.join(', ')}`);
       return;
