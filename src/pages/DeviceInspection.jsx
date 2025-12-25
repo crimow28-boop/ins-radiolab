@@ -394,8 +394,10 @@ export default function DeviceInspection() {
                   {currentChecklistItems.map((item) => (
                     <React.Fragment key={item.id}>
                       {renderItem(item)}
-                      {/* Render sub-items if type is checkbox and value is FALSE (unchecked/no) */}
-                      {item.type === 'checkbox' && checklistData[item.id] === false && item.subItems && item.subItems.length > 0 && (
+                      {/* Render sub-items conditions */}
+                      {((item.type === 'checkbox' && checklistData[item.id] === false) || 
+                        (item.type === 'select' && checklistData[item.id] === 'נכשל')) && 
+                        item.subItems && item.subItems.length > 0 && (
                         <div className="mt-2 space-y-2 animate-in slide-in-from-top-2 fade-in duration-300">
                            {item.subItems.map(subItem => renderItem(subItem, true))}
                         </div>
