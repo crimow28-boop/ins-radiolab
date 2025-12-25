@@ -13,6 +13,7 @@ import { createPageUrl } from '@/utils';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import DeviceManager from '../components/DeviceManager';
+import { chunk } from 'lodash';
 import { toast } from 'sonner';
 
 export default function Special() {
@@ -371,16 +372,20 @@ export default function Special() {
 
                   {/* Summary Progress */}
                   {card.devices?.length > 0 && (
-                    <div className="w-full mt-4 flex gap-1 h-1.5 justify-center">
-                       {card.devices.map(d => {
-                         const { status } = getDeviceProgress(d);
-                         return (
-                           <div key={d} className={`flex-1 ${
-                             status === 'completed' ? 'bg-emerald-500' : 
-                             status === 'draft' ? 'bg-blue-400' : 'bg-slate-200'
-                           }`}></div>
-                         )
-                       })}
+                    <div className="w-full mt-4 flex flex-col gap-1">
+                       {chunk(card.devices, 10).map((deviceChunk, idx) => (
+                         <div key={idx} className="flex gap-1 h-1.5 justify-center w-full">
+                           {deviceChunk.map(d => {
+                             const { status } = getDeviceProgress(d);
+                             return (
+                               <div key={d} className={`flex-1 ${
+                                 status === 'completed' ? 'bg-emerald-500' : 
+                                 status === 'draft' ? 'bg-blue-400' : 'bg-slate-200'
+                               }`}></div>
+                             )
+                           })}
+                         </div>
+                       ))}
                     </div>
                   )}
                   </div>
