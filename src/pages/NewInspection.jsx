@@ -83,8 +83,9 @@ export default function NewInspection() {
     queryFn: () => base44.entities.Device.list(),
   });
 
-  // Use random 6-digit number for inspection ID to keep it short
-  const nextInspectionNumber = Math.floor(100000 + Math.random() * 900000);
+  const nextInspectionNumber = inspections.length > 0 
+    ? (inspections[0].inspection_number || 0) + 1 
+    : 1;
 
   useEffect(() => {
     const loadUser = async () => {
