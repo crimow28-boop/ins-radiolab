@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -22,21 +22,35 @@ import {
   XCircle,
   AlertTriangle,
   Loader2,
-  Trash2
+  Trash2,
+  Folder,
+  FolderOpen,
+  Archive
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 
 export default function InspectionHistory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInspection, setSelectedInspection] = useState(null);
+  const [selectedFolder, setSelectedFolder] = useState(null); // 'all', 'general', or card object
 
   const queryClient = useQueryClient();
   const { data: user } = useQuery({ queryKey: ['user'], queryFn: () => base44.auth.me().catch(() => null) });
 
-  const { data: inspections = [], isLoading } = useQuery({
+  const { data: inspections = [], isLoading: isLoadingInspections } = useQuery({
     queryKey: ['inspections'],
     queryFn: () => base44.entities.Inspection.list('-created_date'),
+  });
+
+  const { data: routineCards = [] } = useQuery({
+    queryKey: ['routineCards_history'],
+    queryFn: () => base44.entities.RoutineCard.list(),
+  });
+
+  const { data: specialCards = [] } = useQuery({
+    queryKey: ['specialCards_history'],
+    queryFn: () => base44.entities.SpecialCard.list(),
   });
 
   const deleteAllMutation = useMutation({
@@ -51,14 +65,38 @@ export default function InspectionHistory() {
     onError: () => toast.error('שגיאה במחיקת הבדיקות')
   });
 
-  const filteredInspections = inspections.filter(insp => {
+  // Group cards
+  const allCards = useMemo(() => {
+    return [
+      ...routineCards.map(c => ({ ...c, type: 'routine' })),
+      ...specialCards.map(c => ({ ...c, type: 'special' }))
+    ].sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
+  }, [routineCards, specialCards]);
+
+  const filteredInspections = useMemo(() => {
+    let filtered = inspections;
+
+    // Folder filtering
+    if (selectedFolder) {
+      if (selectedFolder === 'general') {
+        filtered = filtered.filter(i => !i.card_id);
+      } else if (selectedFolder !== 'all') {
+        filtered = filtered.filter(i => i.card_id === selectedFolder.id);
+      }
+    }
+
+    // Search filtering
     const search = searchTerm.toLowerCase();
-    return (
-      (insp.soldier_name || '').toLowerCase().includes(search) ||
-      String(insp.inspection_number).includes(search) ||
-      (insp.device_serial_numbers || []).some(s => s.toLowerCase().includes(search))
-    );
-  });
+    if (search) {
+      filtered = filtered.filter(insp => 
+        (insp.soldier_name || '').toLowerCase().includes(search) ||
+        String(insp.inspection_number).includes(search) ||
+        (insp.device_serial_numbers || []).some(s => s.toLowerCase().includes(search))
+      );
+    }
+    
+    return filtered;
+  }, [inspections, selectedFolder, searchTerm]);
 
   const profileLabels = {
     '710': '710',
@@ -70,46 +108,73 @@ export default function InspectionHistory() {
     'lotus': 'לוטוס',
   };
 
+  const getFolderStats = (cardId) => {
+    const count = inspections.filter(i => i.card_id === cardId).length;
+    return count;
+  };
+  
+  const generalCount = inspections.filter(i => !i.card_id).length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100" dir="rtl">
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <Link to={createPageUrl('Home')}>
-              <Button variant="ghost">
-                <ArrowRight className="w-4 h-4 ml-2" />
-                חזרה
-              </Button>
-            </Link>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                <ClipboardList className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-800">היסטוריית בדיקות</h1>
-                <p className="text-sm text-slate-500">{inspections.length} בדיקות במערכת</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link to={createPageUrl('Home')}>
+                <Button variant="ghost">
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                  חזרה
+                </Button>
+              </Link>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <ClipboardList className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-800">היסטוריית בדיקות</h1>
+                  <p className="text-sm text-slate-500">
+                    {selectedFolder && selectedFolder !== 'all' 
+                      ? `תיקייה: ${selectedFolder === 'general' ? 'כללי' : selectedFolder.title}`
+                      : 'כל התיקיות'}
+                  </p>
+                </div>
               </div>
             </div>
+
+            {user?.role === 'admin' && (
+               <Button 
+                 variant="destructive" 
+                 className="gap-2"
+                 onClick={() => {
+                   if(confirm("פעולה זו תמחק את כל היסטוריית הבדיקות לצמיתות. האם להמשיך?")) {
+                      deleteAllMutation.mutate();
+                   }
+                 }}
+                 disabled={deleteAllMutation.isPending}
+               >
+                 {deleteAllMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                 מחק הכל
+               </Button>
+            )}
           </div>
-          {user?.role === 'admin' && inspections.length > 0 && (
-             <Button 
-               variant="destructive" 
-               className="gap-2"
-               onClick={() => {
-                 if(confirm("פעולה זו תמחק את כל היסטוריית הבדיקות לצמיתות. האם להמשיך?")) {
-                    deleteAllMutation.mutate();
-                 }
-               }}
-               disabled={deleteAllMutation.isPending}
-             >
-               {deleteAllMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-               מחק הכל
-             </Button>
-          )}
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Navigation / Breadcrumbs if inside folder */}
+        {selectedFolder && (
+          <Button 
+            variant="ghost" 
+            onClick={() => setSelectedFolder(null)}
+            className="mb-4 text-slate-500 hover:text-slate-800"
+          >
+            <Folder className="w-4 h-4 ml-2" />
+            חזרה לתיקיות
+          </Button>
+        )}
+
+        {/* Search Bar */}
         <Card className="bg-white border-0 shadow-lg mb-6">
           <CardContent className="p-4">
             <div className="relative">
@@ -124,98 +189,179 @@ export default function InspectionHistory() {
           </CardContent>
         </Card>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-          </div>
-        ) : filteredInspections.length === 0 ? (
-          <Card className="bg-white border-0 shadow-lg">
-            <CardContent className="text-center py-20 text-slate-500">
-              <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>לא נמצאו בדיקות</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4">
-            {filteredInspections.map((inspection, index) => (
-              <motion.div
-                key={inspection.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.02 }}
-              >
-                <div className="group bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer" onClick={() => setSelectedInspection(inspection)}>
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700 font-bold text-xs border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors overflow-hidden" title={inspection.inspection_number}>
-                        {String(inspection.inspection_number).length > 5 ? '#' + String(inspection.inspection_number).slice(-4) : '#' + inspection.inspection_number}
-                      </div>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-3 mb-1">
-                          <h3 className="font-semibold text-slate-900">
-                            {inspection.soldier_name}
-                          </h3>
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
-                            {profileLabels[inspection.profile] || inspection.profile}
-                          </span>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-y-1 gap-x-4 text-sm text-slate-500">
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {format(new Date(inspection.created_date), 'dd/MM/yyyy HH:mm')}
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Radio className="w-3.5 h-3.5" />
-                            {(inspection.device_serial_numbers || []).length} מכשירים
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1.5 mt-3">
-                          {(inspection.device_serial_numbers || []).slice(0, 4).map(serial => (
-                            <span key={serial} className="px-2 py-0.5 bg-slate-50 text-slate-600 text-xs rounded-md border border-slate-100 font-mono">
-                              {serial}
-                            </span>
-                          ))}
-                          {(inspection.device_serial_numbers || []).length > 4 && (
-                            <span className="px-2 py-0.5 bg-slate-50 text-slate-500 text-xs rounded-md border border-slate-100">
-                              +{(inspection.device_serial_numbers || []).length - 4}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+        {/* View Content */}
+        {!selectedFolder && !searchTerm ? (
+          // Folders View
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {/* General Folder */}
+            {generalCount > 0 && (
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                <Card 
+                  className="cursor-pointer hover:shadow-lg transition-all border-slate-200 hover:border-blue-300 group"
+                  onClick={() => setSelectedFolder('general')}
+                >
+                  <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                      <FolderOpen className="w-8 h-8 text-slate-400" />
                     </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-slate-800">כללי / ללא שיוך</h3>
+                      <Badge variant="secondary" className="mt-2">{generalCount} בדיקות</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
-                    <div className="flex flex-row md:flex-col items-center md:items-end gap-2 pl-2">
-                      <div className="flex gap-2">
-                        {inspection.cavad_status === 'passed' ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-100">
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            צב"ד
-                          </div>
-                        ) : inspection.cavad_status === 'failed' ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 text-xs font-medium border border-red-100">
-                            <XCircle className="w-3.5 h-3.5" />
-                            צב"ד
-                          </div>
-                        ) : null}
-                        
-                        {inspection.fault_description && inspection.fault_description !== 'אין' && (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-100">
-                            <AlertTriangle className="w-3.5 h-3.5" />
-                            תקלה
-                          </div>
+            {/* Cards Folders */}
+            {allCards.map((card, idx) => {
+              const count = getFolderStats(card.id);
+              if (count === 0 && card.is_active) return null; // Skip empty active cards if we want to reduce clutter? Or show all?
+              // Let's show all that have data OR are archived.
+              if (count === 0 && !card.is_active) {/* Show archived even if empty? sure */}
+              
+              const isArchived = !card.is_active;
+
+              return (
+                <motion.div 
+                  key={card.id} 
+                  initial={{ opacity: 0, scale: 0.9 }} 
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <Card 
+                    className={`cursor-pointer hover:shadow-lg transition-all group relative overflow-hidden ${
+                      isArchived ? 'bg-slate-50 border-slate-200' : 'bg-white border-blue-100 hover:border-blue-300'
+                    }`}
+                    onClick={() => setSelectedFolder(card)}
+                  >
+                    {isArchived && (
+                      <div className="absolute top-0 left-0 bg-slate-200 text-slate-500 text-[10px] px-2 py-0.5 rounded-br-lg font-medium">
+                        ארכיון
+                      </div>
+                    )}
+                    <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${
+                        isArchived ? 'bg-slate-200' : 'bg-blue-50 group-hover:bg-blue-100'
+                      }`}>
+                        {isArchived ? (
+                          <Archive className="w-8 h-8 text-slate-500" />
+                        ) : (
+                          <Folder className="w-8 h-8 text-blue-500" />
                         )}
                       </div>
-                      <Button variant="ghost" size="sm" className="text-slate-400 hover:text-blue-600">
-                        <Eye className="w-4 h-4 ml-1" />
-                        פרטים מלאים
-                      </Button>
+                      <div className="w-full">
+                        <h3 className="font-bold text-lg text-slate-800 truncate" title={card.title}>
+                          {card.title}
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-1">{card.type === 'special' ? 'מיוחד' : 'שגרה'}</p>
+                        <Badge variant={isArchived ? "outline" : "secondary"} className="mt-2">
+                          {count} בדיקות
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        ) : (
+          // Inspections List View (Filtered)
+          <div>
+             {isLoadingInspections ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+              </div>
+            ) : filteredInspections.length === 0 ? (
+              <Card className="bg-white border-0 shadow-lg">
+                <CardContent className="text-center py-20 text-slate-500">
+                  <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>לא נמצאו בדיקות בתיקייה זו</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {filteredInspections.map((inspection, index) => (
+                  <motion.div
+                    key={inspection.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.02 }}
+                  >
+                    <div className="group bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer" onClick={() => setSelectedInspection(inspection)}>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700 font-bold text-xs border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors overflow-hidden" title={inspection.inspection_number}>
+                            {String(inspection.inspection_number).length > 5 ? '#' + String(inspection.inspection_number).slice(-4) : '#' + inspection.inspection_number}
+                          </div>
+                          <div>
+                            <div className="flex flex-wrap items-center gap-3 mb-1">
+                              <h3 className="font-semibold text-slate-900">
+                                {inspection.soldier_name}
+                              </h3>
+                              <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
+                                {profileLabels[inspection.profile] || inspection.profile}
+                              </span>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-y-1 gap-x-4 text-sm text-slate-500">
+                              <span className="flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {format(new Date(inspection.created_date), 'dd/MM/yyyy HH:mm')}
+                              </span>
+                              <span className="flex items-center gap-1.5">
+                                <Radio className="w-3.5 h-3.5" />
+                                {(inspection.device_serial_numbers || []).length} מכשירים
+                              </span>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                              {(inspection.device_serial_numbers || []).slice(0, 4).map(serial => (
+                                <span key={serial} className="px-2 py-0.5 bg-slate-50 text-slate-600 text-xs rounded-md border border-slate-100 font-mono">
+                                  {serial}
+                                </span>
+                              ))}
+                              {(inspection.device_serial_numbers || []).length > 4 && (
+                                <span className="px-2 py-0.5 bg-slate-50 text-slate-500 text-xs rounded-md border border-slate-100">
+                                  +{(inspection.device_serial_numbers || []).length - 4}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-row md:flex-col items-center md:items-end gap-2 pl-2">
+                          <div className="flex gap-2">
+                            {inspection.cavad_status === 'passed' ? (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-100">
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                צב"ד
+                              </div>
+                            ) : inspection.cavad_status === 'failed' ? (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 text-xs font-medium border border-red-100">
+                                <XCircle className="w-3.5 h-3.5" />
+                                צב"ד
+                              </div>
+                            ) : null}
+                            
+                            {inspection.fault_description && inspection.fault_description !== 'אין' && (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-100">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                תקלה
+                              </div>
+                            )}
+                          </div>
+                          <Button variant="ghost" size="sm" className="text-slate-400 hover:text-blue-600">
+                            <Eye className="w-4 h-4 ml-1" />
+                            פרטים מלאים
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -244,6 +390,12 @@ export default function InspectionHistory() {
                       {format(new Date(selectedInspection.created_date), 'dd/MM/yyyy HH:mm')}
                     </p>
                   </div>
+                  {selectedInspection.card_title && (
+                    <div className="p-4 bg-slate-50 rounded-xl">
+                      <p className="text-sm text-slate-500">שייך לכרטיס</p>
+                      <p className="font-semibold">{selectedInspection.card_title}</p>
+                    </div>
+                  )}
                   <div className="p-4 bg-slate-50 rounded-xl">
                     <p className="text-sm text-slate-500">סטטוס מסירה</p>
                     <p className="font-semibold">
