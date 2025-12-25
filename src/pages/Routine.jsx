@@ -57,9 +57,13 @@ export default function Routine() {
     enabled: !!(user?.role === 'admin') // Only fetch if admin/manager
   });
 
-  const getDeviceProgress = (serial) => {
-    // Find latest inspection (draft or completed)
-    const deviceInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
+  const getDeviceProgress = (serial, cardId) => {
+    // Find latest inspection (draft or completed) for this specific card
+    const deviceInspections = inspections.filter(i => 
+      i.device_serial_numbers?.includes(serial) && 
+      (cardId ? i.card_id === cardId : true)
+    );
+    
     if (!deviceInspections.length) return { status: 'none', progress: 0 };
     
     // Check for draft
@@ -121,7 +125,7 @@ export default function Routine() {
   if (selectedCard) {
     const cardDevices = selectedCard.devices || [];
     const allCompleted = cardDevices.length > 0 && cardDevices.every(serial => {
-       const { status } = getDeviceProgress(serial);
+       const { status } = getDeviceProgress(serial, selectedCard.id);
        return status === 'completed';
     });
 
@@ -145,10 +149,10 @@ export default function Routine() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-4">
               {cardDevices.map((serial) => {
-                const { status, progress } = getDeviceProgress(serial);
+                const { status, progress } = getDeviceProgress(serial, selectedCard.id);
                 const isCompleted = status === 'completed';
                 const isDraft = status === 'draft';
-                
+
                 return (
                   <div 
                     key={serial} 
@@ -384,9 +388,9 @@ export default function Routine() {
                        {chunk(card.devices, 10).map((deviceChunk, idx) => (
                          <div key={idx} className="flex gap-1 h-1.5 justify-center w-full">
                            {deviceChunk.map(d => {
-                             const { status } = getDeviceProgress(d);
-                             return (
-                               <div key={d} className={`flex-1 ${
+                                 const { status } = getDeviceProgress(d, card.id);
+                                 return (
+                                   <div key={d} className={`flex-1 ${
                                  status === 'completed' ? 'bg-emerald-500' : 
                                  status === 'draft' ? 'bg-blue-400' : 'bg-slate-200'
                                }`}></div>
