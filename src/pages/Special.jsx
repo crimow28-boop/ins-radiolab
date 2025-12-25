@@ -57,27 +57,17 @@ export default function Special() {
     enabled: !!(user?.role === 'admin') // Only fetch if admin/manager
   });
 
-  const getDeviceProgress = (serial, cardIdToData = null) => {
-    // If we are viewing a specific card, use that. Otherwise try to find relevant inspections (e.g. for card list summary)
-    // For card list summary, we need to know WHICH card we are calculating for.
-    // The previous implementation was checking ANY inspection for the device.
-    
-    let relevantInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
-    
-    // If a specific card context is provided (or selected), filter by it
-    const targetCardId = cardIdToData || selectedCard?.id;
-    if (targetCardId) {
-       relevantInspections = relevantInspections.filter(i => i.card_id === targetCardId);
-    } 
-
-    if (!relevantInspections.length) return { status: 'none', progress: 0 };
+  const getDeviceProgress = (serial) => {
+    // Find latest inspection (draft or completed)
+    const deviceInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
+    if (!deviceInspections.length) return { status: 'none', progress: 0 };
     
     // Check for draft
-    const draft = relevantInspections.find(i => i.status === 'draft');
+    const draft = deviceInspections.find(i => i.status === 'draft');
     if (draft) return { status: 'draft', progress: draft.progress || 0 };
     
     // Check for completed
-    const completed = relevantInspections.filter(i => i.status === 'completed' || !i.status); 
+    const completed = deviceInspections.filter(i => i.status === 'completed' || !i.status); // Backwards compat
     if (completed.length > 0) return { status: 'completed', progress: 100 };
     
     return { status: 'none', progress: 0 };
@@ -114,13 +104,8 @@ export default function Special() {
       refetchPin();
       setPinCode('');
       
-      // Archive the card to clear the list and "reset" for next time (create new card or reactivate empty)
-      if (selectedCard) {
-        await base44.entities.SpecialCard.update(selectedCard.id, { is_active: false });
-        queryClient.invalidateQueries({ queryKey: ['specialCards'] });
-        setSelectedCard(null);
-        toast.success("הכרטיס אושר והועבר לארכיון");
-      }
+      // Here you might want to mark the card as "Approved" in the database
+      // For now we just show success
     } else {
       setPinError(true);
       toast.error("קוד שגוי");
@@ -163,7 +148,7 @@ export default function Special() {
                     key={serial} 
                     onClick={() => {
                       if (!managerMode) {
-                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=special&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
+                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=special`));
                       }
                     }}
                     className={`p-4 border border-slate-400 flex flex-col items-center justify-center gap-2 text-center shadow-sm cursor-pointer hover:bg-slate-50 ${
@@ -391,8 +376,7 @@ export default function Special() {
                        {chunk(card.devices, 10).map((deviceChunk, idx) => (
                          <div key={idx} className="flex gap-1 h-1.5 justify-center w-full">
                            {deviceChunk.map(d => {
-                             // Pass card.id to scope progress to this card
-                             const { status } = getDeviceProgress(d, card.id);
+                             const { status } = getDeviceProgress(d);
                              return (
                                <div key={d} className={`flex-1 ${
                                  status === 'completed' ? 'bg-emerald-500' : 

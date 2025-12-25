@@ -57,23 +57,17 @@ export default function Routine() {
     enabled: !!(user?.role === 'admin') // Only fetch if admin/manager
   });
 
-  const getDeviceProgress = (serial, cardIdToData = null) => {
-    // Find latest inspection scoped to the card
-    let relevantInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
-    
-    const targetCardId = cardIdToData || selectedCard?.id;
-    if (targetCardId) {
-       relevantInspections = relevantInspections.filter(i => i.card_id === targetCardId);
-    }
-
-    if (!relevantInspections.length) return { status: 'none', progress: 0 };
+  const getDeviceProgress = (serial) => {
+    // Find latest inspection (draft or completed)
+    const deviceInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
+    if (!deviceInspections.length) return { status: 'none', progress: 0 };
     
     // Check for draft
-    const draft = relevantInspections.find(i => i.status === 'draft');
+    const draft = deviceInspections.find(i => i.status === 'draft');
     if (draft) return { status: 'draft', progress: draft.progress || 0 };
     
     // Check for completed
-    const completed = relevantInspections.filter(i => i.status === 'completed' || !i.status);
+    const completed = deviceInspections.filter(i => i.status === 'completed' || !i.status); // Backwards compat
     if (completed.length > 0) return { status: 'completed', progress: 100 };
     
     return { status: 'none', progress: 0 };
@@ -390,7 +384,7 @@ export default function Routine() {
                        {chunk(card.devices, 10).map((deviceChunk, idx) => (
                          <div key={idx} className="flex gap-1 h-1.5 justify-center w-full">
                            {deviceChunk.map(d => {
-                             const { status } = getDeviceProgress(d, card.id);
+                             const { status } = getDeviceProgress(d);
                              return (
                                <div key={d} className={`flex-1 ${
                                  status === 'completed' ? 'bg-emerald-500' : 
