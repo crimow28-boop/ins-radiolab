@@ -140,7 +140,7 @@ export default function DeviceInspection() {
       } else {
         const newDraft = await base44.entities.Inspection.create({
           ...inspectionData,
-          inspection_number: Date.now()
+          inspection_number: Math.floor(100000 + Math.random() * 900000)
         });
         setDraftId(newDraft.id);
       }
@@ -259,7 +259,7 @@ export default function DeviceInspection() {
       }).join('\n');
 
       const inspectionData = {
-        inspection_number: Date.now(),
+        inspection_number: Math.floor(100000 + Math.random() * 900000),
         device_serial_numbers: [device.serial_number],
         soldier_name: user?.display_name || user?.full_name || 'Anonymous',
         profile: currentChecklistType,
