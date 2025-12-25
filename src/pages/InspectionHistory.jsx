@@ -392,10 +392,27 @@ export default function InspectionHistory() {
                               </div>
                             )}
                           </div>
-                          <Button variant="ghost" size="sm" className="text-slate-400 hover:text-blue-600">
-                            <Eye className="w-4 h-4 ml-1" />
-                            פרטים מלאים
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {user?.role === 'admin' && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if(confirm('האם למחוק את הבדיקה?')) {
+                                    deleteInspectionMutation.mutate(inspection.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="sm" className="text-slate-400 hover:text-blue-600">
+                              <Eye className="w-4 h-4 ml-1" />
+                              פרטים מלאים
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
