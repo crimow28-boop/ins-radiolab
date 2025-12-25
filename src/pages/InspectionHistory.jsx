@@ -147,8 +147,8 @@ export default function InspectionHistory() {
                 <div className="group bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer" onClick={() => setSelectedInspection(inspection)}>
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700 font-bold text-sm border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                        #{inspection.inspection_number}
+                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700 font-bold text-xs border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors overflow-hidden" title={inspection.inspection_number}>
+                        {String(inspection.inspection_number).length > 5 ? '#' + String(inspection.inspection_number).slice(-4) : '#' + inspection.inspection_number}
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-3 mb-1">

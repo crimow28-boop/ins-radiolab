@@ -83,8 +83,10 @@ export default function DeviceInspection() {
   });
 
   const { data: latestInspections = [] } = useQuery({
-    queryKey: ['latest_inspections'],
-    queryFn: () => base44.entities.Inspection.list('-inspection_number', 1),
+    queryKey: ['latest_inspections_seq'],
+    // Fetch inspections with reasonable ID range (not timestamps) to continue sequence
+    // Timestamps are > 1,000,000,000,000, valid sequential IDs are likely < 1,000,000,000
+    queryFn: () => base44.entities.Inspection.filter({ inspection_number: { $lt: 1000000000 } }, '-inspection_number', 1),
   });
 
   const nextInspectionNumber = latestInspections.length > 0
