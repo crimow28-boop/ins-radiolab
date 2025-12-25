@@ -522,11 +522,13 @@ export default function ChecklistManager() {
                                         <Label htmlFor={`req-${item.id}`} className="text-sm cursor-pointer">שדה חובה</Label>
                                       </div>
 
-                                      {/* Sub-items Section (for checkbox 'No' case) */}
-                                      {item.type === 'checkbox' && (
+                                      {/* Sub-items Section */}
+                                      {(item.type === 'checkbox' || item.type === 'select') && (
                                         <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
                                           <div className="flex items-center justify-between mb-2">
-                                            <Label className="text-xs font-semibold text-red-800">אם סומן "לא תקין" (X):</Label>
+                                            <Label className="text-xs font-semibold text-red-800">
+                                              {item.type === 'checkbox' ? 'אם סומן "לא תקין" (X):' : 'אם סומן "נכשל":'}
+                                            </Label>
                                             <Button 
                                               variant="ghost" 
                                               size="sm" 
