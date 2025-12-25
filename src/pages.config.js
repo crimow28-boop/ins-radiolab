@@ -7,8 +7,8 @@ import Info from './pages/Info';
 import InspectionHistory from './pages/InspectionHistory';
 import NewInspection from './pages/NewInspection';
 import Routine from './pages/Routine';
-import Special from './pages/Special';
 import Users from './pages/Users';
+import Special from './pages/Special';
 import __Layout from './Layout.jsx';
 
 
@@ -22,8 +22,8 @@ export const PAGES = {
     "InspectionHistory": InspectionHistory,
     "NewInspection": NewInspection,
     "Routine": Routine,
-    "Special": Special,
     "Users": Users,
+    "Special": Special,
 }
 
 export const pagesConfig = {

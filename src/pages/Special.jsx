@@ -57,17 +57,27 @@ export default function Special() {
     enabled: !!(user?.role === 'admin') // Only fetch if admin/manager
   });
 
-  const getDeviceProgress = (serial) => {
-    // Find latest inspection (draft or completed)
-    const deviceInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
-    if (!deviceInspections.length) return { status: 'none', progress: 0 };
+  const getDeviceProgress = (serial, cardIdToData = null) => {
+    // If we are viewing a specific card, use that. Otherwise try to find relevant inspections (e.g. for card list summary)
+    // For card list summary, we need to know WHICH card we are calculating for.
+    // The previous implementation was checking ANY inspection for the device.
+    
+    let relevantInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
+    
+    // If a specific card context is provided (or selected), filter by it
+    const targetCardId = cardIdToData || selectedCard?.id;
+    if (targetCardId) {
+       relevantInspections = relevantInspections.filter(i => i.card_id === targetCardId);
+    } 
+
+    if (!relevantInspections.length) return { status: 'none', progress: 0 };
     
     // Check for draft
-    const draft = deviceInspections.find(i => i.status === 'draft');
+    const draft = relevantInspections.find(i => i.status === 'draft');
     if (draft) return { status: 'draft', progress: draft.progress || 0 };
     
     // Check for completed
-    const completed = deviceInspections.filter(i => i.status === 'completed' || !i.status); // Backwards compat
+    const completed = relevantInspections.filter(i => i.status === 'completed' || !i.status); 
     if (completed.length > 0) return { status: 'completed', progress: 100 };
     
     return { status: 'none', progress: 0 };
