@@ -114,8 +114,13 @@ export default function Special() {
       refetchPin();
       setPinCode('');
       
-      // Here you might want to mark the card as "Approved" in the database
-      // For now we just show success
+      // Archive the card to clear the list and "reset" for next time (create new card or reactivate empty)
+      if (selectedCard) {
+        await base44.entities.SpecialCard.update(selectedCard.id, { is_active: false });
+        queryClient.invalidateQueries({ queryKey: ['specialCards'] });
+        setSelectedCard(null);
+        toast.success("הכרטיס אושר והועבר לארכיון");
+      }
     } else {
       setPinError(true);
       toast.error("קוד שגוי");
