@@ -180,13 +180,42 @@ export default function ChecklistManager() {
   };
 
   const handleAddQuickItem = (predefined) => {
-    const newItem = {
-      id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      label: predefined.label,
-      type: predefined.type,
-      required: true,
-      options: predefined.options || ''
-    };
+    let newItem;
+
+    if (predefined.type === 'special_tzabad') {
+       const faults = TZABAD_FAULTS[selectedType] || [];
+       newItem = {
+         id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+         label: 'צב"ד',
+         type: 'select',
+         options: 'עבר, נכשל, לא נדרש',
+         required: true,
+         subItems: [
+           {
+             id: `field_${Date.now()}_sub1`,
+             label: 'תקלה',
+             type: 'select',
+             required: true,
+             options: faults.length > 0 ? faults.join(', ') : 'אחר'
+           },
+           {
+             id: `field_${Date.now()}_sub2`,
+             label: 'תוצאה (מספר)',
+             type: 'text',
+             required: true,
+             options: ''
+           }
+         ]
+       };
+    } else {
+       newItem = {
+        id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        label: predefined.label,
+        type: predefined.type,
+        required: true,
+        options: predefined.options || ''
+      };
+    }
     setItems([...items, newItem]);
   };
 
