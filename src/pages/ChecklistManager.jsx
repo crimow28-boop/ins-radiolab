@@ -418,8 +418,8 @@ export default function ChecklistManager() {
 
           {/* Main Content */}
           <div className="flex-1 min-w-0 h-full overflow-hidden flex flex-col">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="flex flex-col h-full border-0 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between shrink-0 border-b">
                 <CardTitle>עריכת סעיפים - {CHECKLIST_TYPES.find(t => t.code === selectedType)?.name}</CardTitle>
                 <div className="flex gap-2">
                     <DropdownMenu>
