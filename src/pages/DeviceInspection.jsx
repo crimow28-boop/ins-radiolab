@@ -219,7 +219,7 @@ export default function DeviceInspection() {
             value={checklistData[item.id] || ''}
             onChange={(e) => handleValueChange(item.id, e.target.value)}
             placeholder="הזן טקסט..."
-            className="bg-white"
+            className="bg-white text-right"
           />
         )}
 
