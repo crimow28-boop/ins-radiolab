@@ -510,6 +510,7 @@ export default function ChecklistManager() {
                                             value={item.options || ''}
                                             onChange={(e) => handleUpdateItem(index, 'options', e.target.value)}
                                             placeholder="תקין, לא תקין, חסר"
+                                            className="text-right"
                                           />
                                         </div>
                                       )}
