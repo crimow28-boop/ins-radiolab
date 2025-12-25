@@ -191,12 +191,12 @@ export default function InspectionHistory() {
                         {inspection.cavad_status === 'passed' ? (
                           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-100">
                             <CheckCircle className="w-3.5 h-3.5" />
-                            CAVAD
+                            צב"ד
                           </div>
                         ) : inspection.cavad_status === 'failed' ? (
                           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 text-xs font-medium border border-red-100">
                             <XCircle className="w-3.5 h-3.5" />
-                            CAVAD
+                            צב"ד
                           </div>
                         ) : null}
                         
@@ -282,7 +282,7 @@ export default function InspectionHistory() {
                 </div>
 
                 <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-3">בדיקות CAVAD</h4>
+                  <h4 className="font-semibold mb-3">בדיקות צב"ד</h4>
                   <Badge className={
                     selectedInspection.cavad_status === 'passed' 
                       ? 'bg-green-100 text-green-800' 
