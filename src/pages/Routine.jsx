@@ -390,7 +390,7 @@ export default function Routine() {
                        {chunk(card.devices, 10).map((deviceChunk, idx) => (
                          <div key={idx} className="flex gap-1 h-1.5 justify-center w-full">
                            {deviceChunk.map(d => {
-                             const { status } = getDeviceProgress(d);
+                             const { status } = getDeviceProgress(d, card.id);
                              return (
                                <div key={d} className={`flex-1 ${
                                  status === 'completed' ? 'bg-emerald-500' : 
