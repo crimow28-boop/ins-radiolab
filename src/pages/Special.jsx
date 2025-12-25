@@ -101,17 +101,11 @@ export default function Special() {
       // Rotate PIN
       const newPin = Math.floor(1000 + Math.random() * 9000).toString();
       await base44.entities.SystemSettings.update(res[0].id, { value: newPin });
-      
-      // Archive the card
-      if (selectedCard) {
-        await base44.entities.SpecialCard.update(selectedCard.id, { is_active: false });
-        queryClient.invalidateQueries({ queryKey: ['specialCards'] });
-        setSelectedCard(null);
-        toast.success("הכרטיס אושר והועבר להיסטוריה");
-      }
-
       refetchPin();
       setPinCode('');
+      
+      // Here you might want to mark the card as "Approved" in the database
+      // For now we just show success
     } else {
       setPinError(true);
       toast.error("קוד שגוי");
@@ -154,7 +148,7 @@ export default function Special() {
                     key={serial} 
                     onClick={() => {
                       if (!managerMode) {
-                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=special&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
+                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=special`));
                       }
                     }}
                     className={`p-4 border border-slate-400 flex flex-col items-center justify-center gap-2 text-center shadow-sm cursor-pointer hover:bg-slate-50 ${
@@ -292,16 +286,14 @@ export default function Special() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-slate-800">מיוחד</h1>
           <div className="flex gap-2">
-            {user?.role === 'admin' && (
-              <Button
-                variant={managerMode ? 'default' : 'outline'}
-                onClick={() => setManagerMode(!managerMode)}
-              >
-                <SettingsIcon className="w-4 h-4 ml-2" />
-                {managerMode ? 'סגור ניהול' : 'מצב ניהול'}
-              </Button>
-            )}
-            {managerMode && user?.role === 'admin' && (
+            <Button
+              variant={managerMode ? 'default' : 'outline'}
+              onClick={() => setManagerMode(!managerMode)}
+            >
+              <SettingsIcon className="w-4 h-4 ml-2" />
+              {managerMode ? 'סגור ניהול' : 'מצב ניהול'}
+            </Button>
+            {managerMode && (
               <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-blue-600 hover:bg-blue-700">
