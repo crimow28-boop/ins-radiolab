@@ -1,27 +1,27 @@
+import ChecklistManager from './pages/ChecklistManager';
 import DeviceHistory from './pages/DeviceHistory';
+import DeviceInspection from './pages/DeviceInspection';
 import Devices from './pages/Devices';
 import Home from './pages/Home';
+import Info from './pages/Info';
 import InspectionHistory from './pages/InspectionHistory';
 import NewInspection from './pages/NewInspection';
-import Info from './pages/Info';
 import Routine from './pages/Routine';
 import Special from './pages/Special';
-import DeviceInspection from './pages/DeviceInspection';
-import ChecklistManager from './pages/ChecklistManager';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "ChecklistManager": ChecklistManager,
     "DeviceHistory": DeviceHistory,
+    "DeviceInspection": DeviceInspection,
     "Devices": Devices,
     "Home": Home,
+    "Info": Info,
     "InspectionHistory": InspectionHistory,
     "NewInspection": NewInspection,
-    "Info": Info,
     "Routine": Routine,
     "Special": Special,
-    "DeviceInspection": DeviceInspection,
-    "ChecklistManager": ChecklistManager,
 }
 
 export const pagesConfig = {
