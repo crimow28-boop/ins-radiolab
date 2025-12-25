@@ -2,14 +2,23 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Radio, Star, Calendar, Info, Users } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 export default function Layout({ children, currentPageName }) {
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: () => base44.auth.me().catch(() => null),
+  });
+
   const navItems = [
     { name: 'Special', label: 'מיוחד', icon: Star },
     { name: 'Routine', label: 'שגרה', icon: Calendar },
     { name: 'Info', label: 'מידע', icon: Info },
-    { name: 'Users', label: 'משתמשים', icon: Users },
+    { name: 'Users', label: 'משתמשים', icon: Users, adminOnly: true },
   ];
+
+  const filteredNavItems = navItems.filter(item => !item.adminOnly || user?.role === 'admin');
 
   return (
     <div className="min-h-screen bg-slate-50" dir="rtl">
@@ -29,7 +38,7 @@ export default function Layout({ children, currentPageName }) {
             
             {/* Desktop Tabs */}
             <nav className="hidden md:flex items-center gap-2">
-              {navItems.map((item) => {
+              {filteredNavItems.map((item) => {
                 const isActive = currentPageName === item.name;
                 return (
                   <Link key={item.name} to={createPageUrl(item.name)}>
@@ -52,7 +61,7 @@ export default function Layout({ children, currentPageName }) {
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 shadow-2xl">
         <div className="flex items-center justify-around px-4 py-3">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const isActive = currentPageName === item.name;
             return (
               <Link 
