@@ -105,6 +105,41 @@ export default function ChecklistManager() {
     setItems(newItems);
   };
 
+  const handleAddSubItem = (parentIndex) => {
+    const newItems = [...items];
+    const parentItem = newItems[parentIndex];
+    const subItems = parentItem.subItems || [];
+    
+    subItems.push({
+      id: `field_${Date.now()}`,
+      label: '',
+      type: 'text', // Default to text for sub-explanation usually
+      required: true,
+      options: []
+    });
+    
+    newItems[parentIndex] = { ...parentItem, subItems };
+    setItems(newItems);
+  };
+
+  const handleRemoveSubItem = (parentIndex, subIndex) => {
+    const newItems = [...items];
+    const parentItem = newItems[parentIndex];
+    const subItems = [...(parentItem.subItems || [])];
+    subItems.splice(subIndex, 1);
+    newItems[parentIndex] = { ...parentItem, subItems };
+    setItems(newItems);
+  };
+
+  const handleUpdateSubItem = (parentIndex, subIndex, field, value) => {
+    const newItems = [...items];
+    const parentItem = newItems[parentIndex];
+    const subItems = [...(parentItem.subItems || [])];
+    subItems[subIndex] = { ...subItems[subIndex], [field]: value };
+    newItems[parentIndex] = { ...parentItem, subItems };
+    setItems(newItems);
+  };
+
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     const newItems = Array.from(items);
@@ -249,6 +284,75 @@ export default function ChecklistManager() {
                                         />
                                         <Label htmlFor={`req-${item.id}`} className="text-sm cursor-pointer">שדה חובה</Label>
                                       </div>
+
+                                      {/* Sub-items Section (for checkbox 'No' case) */}
+                                      {item.type === 'checkbox' && (
+                                        <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <Label className="text-xs font-semibold text-red-800">אם סומן "לא תקין" (X):</Label>
+                                            <Button 
+                                              variant="ghost" 
+                                              size="sm" 
+                                              className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-100"
+                                              onClick={() => handleAddSubItem(index)}
+                                            >
+                                              <Plus className="w-3 h-3 ml-1" />
+                                              הוסף תנאי
+                                            </Button>
+                                          </div>
+                                          
+                                          <div className="space-y-3 pl-2 border-r-2 border-red-200 mr-1">
+                                            {(item.subItems || []).map((subItem, subIndex) => (
+                                              <div key={subItem.id} className="bg-white p-2 rounded border border-red-100 relative group/sub">
+                                                 <div className="flex gap-2 items-start">
+                                                   <div className="flex-1 space-y-2">
+                                                     <Input
+                                                        value={subItem.label}
+                                                        onChange={(e) => handleUpdateSubItem(index, subIndex, 'label', e.target.value)}
+                                                        placeholder="שדה נוסף (למשל: פרט תקלה)"
+                                                        className="h-8 text-sm"
+                                                      />
+                                                      <div className="flex gap-2">
+                                                        <Select
+                                                          value={subItem.type}
+                                                          onValueChange={(value) => handleUpdateSubItem(index, subIndex, 'type', value)}
+                                                        >
+                                                          <SelectTrigger className="h-8 text-xs w-32">
+                                                            <SelectValue />
+                                                          </SelectTrigger>
+                                                          <SelectContent>
+                                                            {FIELD_TYPES.map(ft => (
+                                                              <SelectItem key={ft.value} value={ft.value}>{ft.label}</SelectItem>
+                                                            ))}
+                                                          </SelectContent>
+                                                        </Select>
+                                                        {subItem.type === 'select' && (
+                                                          <Input
+                                                            value={subItem.options?.join(', ') || ''}
+                                                            onChange={(e) => handleUpdateSubItem(index, subIndex, 'options', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                                                            placeholder="אפשרויות..."
+                                                            className="h-8 text-sm flex-1"
+                                                          />
+                                                        )}
+                                                      </div>
+                                                   </div>
+                                                   <Button
+                                                      variant="ghost"
+                                                      size="icon"
+                                                      className="h-6 w-6 text-slate-400 hover:text-red-600"
+                                                      onClick={() => handleRemoveSubItem(index, subIndex)}
+                                                    >
+                                                      <Trash2 className="w-3 h-3" />
+                                                    </Button>
+                                                 </div>
+                                              </div>
+                                            ))}
+                                            {(!item.subItems || item.subItems.length === 0) && (
+                                              <p className="text-xs text-slate-400 italic">לא הוגדרו שדות נוספים למקרה של תקלה</p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
 
                                     <Button

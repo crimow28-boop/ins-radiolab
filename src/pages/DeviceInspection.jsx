@@ -310,54 +310,15 @@ export default function DeviceInspection() {
                      </div>
                   )}
                   {currentChecklistItems.map((item) => (
-                    <div 
-                      key={item.id}
-                      className="p-4 bg-white border rounded-xl hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <Label className={`font-medium ${item.required ? 'after:content-["*"] after:text-red-500 after:mr-1' : ''}`}>
-                          {item.label}
-                        </Label>
-                      </div>
-
-                      {item.type === 'checkbox' && (
-                        <div className="flex items-center space-x-2 space-x-reverse">
-                          <Switch
-                            checked={checklistData[item.id] || false}
-                            onCheckedChange={(checked) => handleValueChange(item.id, checked)}
-                            id={item.id}
-                          />
-                          <Label htmlFor={item.id} className="cursor-pointer text-sm text-slate-500">
-                            {checklistData[item.id] ? 'תקין' : 'לא תקין / לא נבדק'}
-                          </Label>
+                    <React.Fragment key={item.id}>
+                      {renderItem(item)}
+                      {/* Render sub-items if type is checkbox and value is FALSE (unchecked/no) */}
+                      {item.type === 'checkbox' && checklistData[item.id] === false && item.subItems && item.subItems.length > 0 && (
+                        <div className="mt-2 space-y-2 animate-in slide-in-from-top-2 fade-in duration-300">
+                           {item.subItems.map(subItem => renderItem(subItem, true))}
                         </div>
                       )}
-
-                      {item.type === 'text' && (
-                        <Input 
-                          value={checklistData[item.id] || ''}
-                          onChange={(e) => handleValueChange(item.id, e.target.value)}
-                          placeholder="הזן טקסט..."
-                          className="bg-white"
-                        />
-                      )}
-
-                      {item.type === 'select' && (
-                        <Select 
-                          value={checklistData[item.id]} 
-                          onValueChange={(val) => handleValueChange(item.id, val)}
-                        >
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="בחר אפשרות" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(item.options || []).map(opt => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
+                    </React.Fragment>
                   ))}
                 </div>
 
