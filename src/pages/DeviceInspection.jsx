@@ -228,7 +228,7 @@ export default function DeviceInspection() {
             value={checklistData[item.id]} 
             onValueChange={(val) => handleValueChange(item.id, val)}
           >
-            <SelectTrigger className="bg-white">
+            <SelectTrigger className="bg-white text-right">
               <SelectValue placeholder="בחר אפשרות" />
             </SelectTrigger>
             <SelectContent>
