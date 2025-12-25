@@ -82,6 +82,15 @@ export default function DeviceInspection() {
     queryFn: () => base44.entities.InspectionChecklist.list(),
   });
 
+  const { data: latestInspections = [] } = useQuery({
+    queryKey: ['latest_inspections'],
+    queryFn: () => base44.entities.Inspection.list('-inspection_number', 1),
+  });
+
+  const nextInspectionNumber = latestInspections.length > 0
+    ? (latestInspections[0].inspection_number || 0) + 1
+    : 1;
+
   const getDeviceChecklistType = () => {
     if (!device) return null;
     
@@ -140,7 +149,7 @@ export default function DeviceInspection() {
       } else {
         const newDraft = await base44.entities.Inspection.create({
           ...inspectionData,
-          inspection_number: Math.floor(100000 + Math.random() * 900000)
+          inspection_number: nextInspectionNumber
         });
         setDraftId(newDraft.id);
       }
@@ -259,7 +268,7 @@ export default function DeviceInspection() {
       }).join('\n');
 
       const inspectionData = {
-        inspection_number: Math.floor(100000 + Math.random() * 900000),
+        inspection_number: existingDraft?.inspection_number || nextInspectionNumber,
         device_serial_numbers: [device.serial_number],
         soldier_name: user?.display_name || user?.full_name || 'Anonymous',
         profile: currentChecklistType,
