@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,37 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Radio, Shield, AlertTriangle, Info as InfoIcon, Settings } from 'lucide-react';
+import { Search, Radio, Shield, AlertTriangle, Info as InfoIcon, Settings, RefreshCw, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Info() {
   const [searchTerm, setSearchTerm] = useState('');
+  const queryClient = useQueryClient();
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => base44.auth.me().catch(() => null),
+  });
+
+  const resetEncryptionMutation = useMutation({
+    mutationFn: async () => {
+      const encryptedDevices = await base44.entities.Device.filter({ encryption_status: 'encrypted' });
+      if (encryptedDevices.length === 0) return 0;
+      
+      const promises = encryptedDevices.map(d => 
+        base44.entities.Device.update(d.id, { encryption_status: 'not_encrypted' })
+      );
+      await Promise.all(promises);
+      return encryptedDevices.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success(`הצפנה אופסה עבור ${count} מכשירים`);
+    },
+    onError: () => {
+      toast.error('שגיאה באיפוס הצפנה');
+    }
+  });
 
   const { data: devices = [] } = useQuery({
     queryKey: ['devices'],
@@ -38,12 +65,29 @@ export default function Info() {
             <h1 className="text-3xl font-bold text-slate-800 mb-2">מידע</h1>
             <p className="text-slate-500">מידע טכני, נתונים וסטטוסים</p>
           </div>
-          <Link to={createPageUrl('ChecklistManager')}>
-             <Button variant="outline" className="gap-2 bg-white hover:bg-slate-50">
-               <Settings className="w-4 h-4" />
-               ניהול רשימות בדיקה
-             </Button>
-          </Link>
+          <div className="flex gap-2">
+            {currentUser?.role === 'admin' && (
+              <Button 
+                variant="outline" 
+                className="gap-2 bg-white hover:bg-slate-50 border-red-200 text-red-600 hover:text-red-700 hover:border-red-300"
+                onClick={() => {
+                  if (confirm('האם אתה בטוח שברצונך לאפס את סטטוס ההצפנה לכל המכשירים?')) {
+                    resetEncryptionMutation.mutate();
+                  }
+                }}
+                disabled={resetEncryptionMutation.isPending}
+              >
+                {resetEncryptionMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                אפס הצפנות
+              </Button>
+            )}
+            <Link to={createPageUrl('ChecklistManager')}>
+               <Button variant="outline" className="gap-2 bg-white hover:bg-slate-50">
+                 <Settings className="w-4 h-4" />
+                 ניהול רשימות בדיקה
+               </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -126,10 +170,7 @@ export default function Info() {
                       <Badge variant="outline">{device.device_group}</Badge>
                     </div>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">סטטוס:</span>
-                        <span className="font-medium">{device.status === 'active' ? 'פעיל' : device.status}</span>
-                      </div>
+
                       <div className="flex justify-between">
                         <span className="text-slate-500">הצפנה:</span>
                         <span className="font-medium flex items-center gap-1">
