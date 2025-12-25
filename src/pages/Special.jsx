@@ -164,11 +164,22 @@ export default function Special() {
                       ></div>
                     </div>
                     
-                    {isDraft && (
-                      <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
-                         <span>בתהליך {progress}%</span>
-                      </div>
-                    )}
+                    <div className={`flex items-center gap-1 text-xs font-medium ${
+                      isCompleted ? 'text-emerald-700' : (isDraft ? 'text-blue-700' : 'text-slate-500')
+                    }`}>
+                      {isCompleted ? (
+                        <>
+                          <CheckCircle className="w-3 h-3" />
+                          <span>הושלם</span>
+                        </>
+                      ) : isDraft ? (
+                        <>
+                           <span>בתהליך {progress}%</span>
+                        </>
+                      ) : (
+                        <span>לביצוע</span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
