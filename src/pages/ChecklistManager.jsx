@@ -551,7 +551,7 @@ export default function ChecklistManager() {
                                                         value={subItem.label}
                                                         onChange={(e) => handleUpdateSubItem(index, subIndex, 'label', e.target.value)}
                                                         placeholder="שדה נוסף (למשל: פרט תקלה)"
-                                                        className="h-8 text-sm"
+                                                        className="h-8 text-sm text-right"
                                                       />
                                                       <div className="flex gap-2">
                                                         <Select
