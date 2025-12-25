@@ -33,6 +33,11 @@ export default function Home() {
     queryFn: () => base44.entities.Device.list()
   });
 
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: () => base44.auth.me().catch(() => null),
+  });
+
   const { data: inspections = [] } = useQuery({
     queryKey: ['inspections'],
     queryFn: () => base44.entities.Inspection.list('-created_date', 100)
@@ -166,6 +171,7 @@ export default function Home() {
             </Card>
           </Link>
 
+          {user?.role === 'admin' && (
           <Link to={createPageUrl('ChecklistManager')}>
             <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all cursor-pointer h-full group">
               <CardContent className="p-6 flex items-center gap-4">
@@ -180,6 +186,7 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
+          )}
         </div>
 
         <Card className="bg-white border-0 shadow-lg mt-6">

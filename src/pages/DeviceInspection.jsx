@@ -22,6 +22,8 @@ export default function DeviceInspection() {
   
   const serialNumber = searchParams.get('serial');
   const source = searchParams.get('source'); // 'special' or 'routine'
+  const cardId = searchParams.get('cardId');
+  const cardTitle = searchParams.get('cardTitle');
   
   const [subtype, setSubtype] = useState('');
   const [checklistData, setChecklistData] = useState({});
@@ -143,7 +145,10 @@ export default function DeviceInspection() {
         status: 'draft',
         progress: progress,
         checklist_answers: JSON.stringify(checklistData),
-        remarks: remarks
+        remarks: remarks,
+        card_id: cardId,
+        card_title: cardTitle,
+        card_type: source
       };
 
       if (draftId) {
@@ -366,7 +371,10 @@ export default function DeviceInspection() {
         remarks: `סוג בדיקה: ${currentChecklistObj?.name || currentChecklistType}\n${remarks}\n\nתוצאות:\n${resultsSummary}`,
         status: 'completed',
         progress: 100,
-        checklist_answers: JSON.stringify(checklistData)
+        checklist_answers: JSON.stringify(checklistData),
+        card_id: cardId,
+        card_title: cardTitle,
+        card_type: source
       };
 
       if (draftId) {
