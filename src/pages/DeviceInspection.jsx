@@ -160,6 +160,60 @@ export default function DeviceInspection() {
     }
   };
 
+  // Helper to check if item is visible based on parent conditions
+  const renderItem = (item, isSubItem = false) => {
+    return (
+      <div 
+        key={item.id}
+        className={`p-4 bg-white border rounded-xl hover:bg-slate-50 transition-colors ${isSubItem ? 'mr-6 border-red-200 bg-red-50/30' : ''}`}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <Label className={`font-medium ${item.required ? 'after:content-["*"] after:text-red-500 after:mr-1' : ''} ${isSubItem ? 'text-sm' : ''}`}>
+            {item.label}
+          </Label>
+        </div>
+
+        {item.type === 'checkbox' && (
+          <div className="flex items-center space-x-2 space-x-reverse">
+            <Switch
+              checked={checklistData[item.id] || false}
+              onCheckedChange={(checked) => handleValueChange(item.id, checked)}
+              id={item.id}
+            />
+            <Label htmlFor={item.id} className="cursor-pointer text-sm text-slate-500">
+              {checklistData[item.id] ? 'תקין' : 'לא תקין / לא נבדק'}
+            </Label>
+          </div>
+        )}
+
+        {item.type === 'text' && (
+          <Input 
+            value={checklistData[item.id] || ''}
+            onChange={(e) => handleValueChange(item.id, e.target.value)}
+            placeholder="הזן טקסט..."
+            className="bg-white"
+          />
+        )}
+
+        {item.type === 'select' && (
+          <Select 
+            value={checklistData[item.id]} 
+            onValueChange={(val) => handleValueChange(item.id, val)}
+          >
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="בחר אפשרות" />
+            </SelectTrigger>
+            <SelectContent>
+              {(item.options || []).map(opt => (
+                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+    );
+  };
+
   const handleSubmit = async () => {
     if (!currentChecklistType) return;
     
