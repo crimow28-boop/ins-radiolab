@@ -6,13 +6,26 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, Save, GripVertical, Settings, ArrowRight, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Save, GripVertical, ArrowRight, Loader2, Copy, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const CHECKLIST_TYPES = [
   { code: '710_no_amp', name: '710 ללא מגבר' },
@@ -32,11 +45,41 @@ const FIELD_TYPES = [
   { value: 'select', label: 'בחירה מרשימה' }
 ];
 
+const PREDEFINED_ITEMS = [
+  { label: 'סודר', type: 'text' },
+  { label: 'שם', type: 'text' },
+  { label: 'מספר צ’', type: 'text' },
+  { label: 'אנטנה', type: 'select', options: 'תקין, לא תקין, חסר' },
+  { label: 'מער״ש', type: 'select', options: 'תקין, לא תקין, חסר' },
+  { label: 'צב"ד', type: 'checkbox' },
+  { label: 'הצפנה', type: 'checkbox' },
+  { label: 'תדרים', type: 'checkbox' },
+  { label: 'בדיקות קשר', type: 'checkbox' },
+  { label: 'החלפת סוללה', type: 'checkbox' },
+  { label: 'אטימות', type: 'checkbox' },
+  { label: 'ציוד נוסף', type: 'text' },
+  { label: 'הערות', type: 'text' }
+];
+
 export default function ChecklistManager() {
   const queryClient = useQueryClient();
   const [selectedType, setSelectedType] = useState('710_no_amp');
   const [items, setItems] = useState([]);
   const [currentChecklistId, setCurrentChecklistId] = useState(null);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [sourceChecklistCode, setSourceChecklistCode] = useState('');
+
+  // Helper to process items from DB (array options -> string options)
+  const processItemsFromDb = (items) => {
+    return (items || []).map(item => ({
+      ...item,
+      options: Array.isArray(item.options) ? item.options.join(', ') : (item.options || ''),
+      subItems: (item.subItems || []).map(sub => ({
+        ...sub,
+        options: Array.isArray(sub.options) ? sub.options.join(', ') : (sub.options || '')
+      }))
+    }));
+  };
 
   const { data: checklists = [], isLoading } = useQuery({
     queryKey: ['checklists'],
@@ -44,7 +87,7 @@ export default function ChecklistManager() {
     onSuccess: (data) => {
       const current = data.find(c => c.code === selectedType);
       if (current) {
-        setItems(current.items || []);
+        setItems(processItemsFromDb(current.items));
         setCurrentChecklistId(current.id);
       } else {
         setItems([]);
@@ -57,7 +100,7 @@ export default function ChecklistManager() {
   React.useEffect(() => {
     const current = checklists.find(c => c.code === selectedType);
     if (current) {
-      setItems(current.items || []);
+      setItems(processItemsFromDb(current.items));
       setCurrentChecklistId(current.id);
     } else {
       setItems([]);
@@ -88,7 +131,18 @@ export default function ChecklistManager() {
       label: '',
       type: 'checkbox',
       required: true,
-      options: []
+      options: ''
+    };
+    setItems([...items, newItem]);
+  };
+
+  const handleAddQuickItem = (predefined) => {
+    const newItem = {
+      id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      label: predefined.label,
+      type: predefined.type,
+      required: true,
+      options: predefined.options || ''
     };
     setItems([...items, newItem]);
   };
@@ -115,7 +169,7 @@ export default function ChecklistManager() {
       label: '',
       type: 'text', // Default to text for sub-explanation usually
       required: true,
-      options: []
+      options: ''
     });
     
     newItems[parentIndex] = { ...parentItem, subItems };
@@ -148,13 +202,52 @@ export default function ChecklistManager() {
     setItems(newItems);
   };
 
+  // Helper to process items for DB (string options -> array options)
+  const processItemsForDb = (items) => {
+    return items.map(item => ({
+      ...item,
+      options: typeof item.options === 'string' 
+        ? item.options.split(',').map(s => s.trim()).filter(Boolean)
+        : (item.options || []),
+      subItems: (item.subItems || []).map(sub => ({
+        ...sub,
+        options: typeof sub.options === 'string'
+          ? sub.options.split(',').map(s => s.trim()).filter(Boolean)
+          : (sub.options || [])
+      }))
+    }));
+  };
+
   const handleSave = () => {
     const checklistName = CHECKLIST_TYPES.find(t => t.code === selectedType)?.name;
+    const itemsForDb = processItemsForDb(items);
+    
     saveMutation.mutate({
       code: selectedType,
       name: checklistName,
-      items: items
+      items: itemsForDb
     });
+  };
+
+  const handleDuplicate = () => {
+    if (!sourceChecklistCode) return;
+    const sourceChecklist = checklists.find(c => c.code === sourceChecklistCode);
+    if (sourceChecklist && sourceChecklist.items) {
+        // Deep copy and generate new IDs to avoid conflicts
+        const newItems = JSON.parse(JSON.stringify(sourceChecklist.items)).map(item => ({
+            ...item,
+            id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            options: Array.isArray(item.options) ? item.options.join(', ') : (item.options || ''), // Convert to string for UI
+            subItems: (item.subItems || []).map(sub => ({
+                ...sub,
+                id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                options: Array.isArray(sub.options) ? sub.options.join(', ') : (sub.options || '')
+            }))
+        }));
+        setItems(newItems);
+        toast.success(`רשימה שוכפלה מ-${CHECKLIST_TYPES.find(t => t.code === sourceChecklistCode)?.name}`);
+        setDuplicateDialogOpen(false);
+    }
   };
 
   return (
@@ -170,14 +263,50 @@ export default function ChecklistManager() {
             </Link>
             <h1 className="text-3xl font-bold text-slate-800">ניהול רשימות בדיקה</h1>
           </div>
-          <Button 
-            onClick={handleSave} 
-            className="bg-blue-600 hover:bg-blue-700"
-            disabled={saveMutation.isPending}
-          >
-            {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Save className="w-4 h-4 ml-2" />}
-            שמור שינויים
-          </Button>
+          <div className="flex gap-2">
+            <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                        <Copy className="w-4 h-4" />
+                        שכפל רשימה
+                    </Button>
+                </DialogTrigger>
+                <DialogContent dir="rtl">
+                    <DialogHeader>
+                        <DialogTitle>שכפול רשימת בדיקה</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Label>בחר רשימה למקור</Label>
+                        <Select onValueChange={setSourceChecklistCode} value={sourceChecklistCode}>
+                            <SelectTrigger className="mt-2">
+                                <SelectValue placeholder="בחר רשימה..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {CHECKLIST_TYPES.filter(t => t.code !== selectedType).map(type => (
+                                    <SelectItem key={type.code} value={type.code}>{type.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-sm text-slate-500 mt-2">
+                            פעולה זו תחליף את כל הסעיפים ברשימה הנוכחית ({CHECKLIST_TYPES.find(t => t.code === selectedType)?.name}).
+                        </p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDuplicateDialogOpen(false)}>ביטול</Button>
+                        <Button onClick={handleDuplicate} disabled={!sourceChecklistCode}>שכפל</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Button 
+                onClick={handleSave} 
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={saveMutation.isPending}
+            >
+                {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Save className="w-4 h-4 ml-2" />}
+                שמור שינויים
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -201,10 +330,27 @@ export default function ChecklistManager() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>עריכת סעיפים - {CHECKLIST_TYPES.find(t => t.code === selectedType)?.name}</CardTitle>
-                <Button variant="outline" size="sm" onClick={handleAddItem}>
-                  <Plus className="w-4 h-4 ml-2" />
-                  הוסף סעיף
-                </Button>
+                <div className="flex gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="secondary" size="sm">
+                                <Zap className="w-4 h-4 ml-2" />
+                                הוספה מהירה
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="h-96 overflow-y-auto">
+                            {PREDEFINED_ITEMS.map((item, idx) => (
+                                <DropdownMenuItem key={idx} onClick={() => handleAddQuickItem(item)}>
+                                    {item.label}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button variant="outline" size="sm" onClick={handleAddItem}>
+                        <Plus className="w-4 h-4 ml-2" />
+                        הוסף סעיף
+                    </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -269,8 +415,8 @@ export default function ChecklistManager() {
                                         <div>
                                           <Label className="text-xs text-slate-500 mb-1">אפשרויות (מופרדות בפסיקים)</Label>
                                           <Input
-                                            value={item.options?.join(', ') || ''}
-                                            onChange={(e) => handleUpdateItem(index, 'options', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                                            value={item.options || ''}
+                                            onChange={(e) => handleUpdateItem(index, 'options', e.target.value)}
                                             placeholder="תקין, לא תקין, חסר"
                                           />
                                         </div>
@@ -328,8 +474,8 @@ export default function ChecklistManager() {
                                                         </Select>
                                                         {subItem.type === 'select' && (
                                                           <Input
-                                                            value={subItem.options?.join(', ') || ''}
-                                                            onChange={(e) => handleUpdateSubItem(index, subIndex, 'options', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                                                            value={subItem.options || ''}
+                                                            onChange={(e) => handleUpdateSubItem(index, subIndex, 'options', e.target.value)}
                                                             placeholder="אפשרויות..."
                                                             className="h-8 text-sm flex-1"
                                                           />
