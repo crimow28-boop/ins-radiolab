@@ -395,13 +395,20 @@ export default function DeviceInspection() {
                     <React.Fragment key={item.id}>
                       {renderItem(item)}
                       {/* Render sub-items conditions */}
-                      {((item.type === 'checkbox' && checklistData[item.id] === false) || 
-                        (item.type === 'select' && checklistData[item.id] === 'נכשל')) && 
-                        item.subItems && item.subItems.length > 0 && (
-                        <div className="mt-2 space-y-2 animate-in slide-in-from-top-2 fade-in duration-300">
-                           {item.subItems.map(subItem => renderItem(subItem, true))}
-                        </div>
-                      )}
+                      {(() => {
+                        const val = checklistData[item.id];
+                        const conditionVal = item.conditionValue !== undefined ? item.conditionValue : (item.type === 'checkbox' ? false : 'נכשל');
+                        const isMatch = val === conditionVal;
+
+                        if (isMatch && item.subItems && item.subItems.length > 0) {
+                          return (
+                            <div className="mt-2 space-y-2 animate-in slide-in-from-top-2 fade-in duration-300">
+                               {item.subItems.map(subItem => renderItem(subItem, true))}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </React.Fragment>
                   ))}
                 </div>
