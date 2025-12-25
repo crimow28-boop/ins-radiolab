@@ -27,6 +27,38 @@ export default function DeviceInspection() {
   const [checklistData, setChecklistData] = useState({});
   const [remarks, setRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draftId, setDraftId] = useState(null);
+
+  // Fetch existing draft
+  const { data: existingDraft } = useQuery({
+    queryKey: ['inspection_draft', serialNumber],
+    queryFn: async () => {
+       const res = await base44.entities.Inspection.filter({ 
+         status: 'draft',
+         // We need to filter by serial number manually or use a more complex query if supported
+         // Assuming device_serial_numbers is an array, exact match might be tricky in basic filter if not handled
+         // We will filter client side if needed or rely on the fact we usually have one draft per device
+       });
+       // Filter for this specific device
+       return res.find(d => d.device_serial_numbers?.includes(serialNumber));
+    },
+    enabled: !!serialNumber,
+  });
+
+  useEffect(() => {
+    if (existingDraft) {
+      setDraftId(existingDraft.id);
+      setSubtype(existingDraft.profile || '');
+      setRemarks(existingDraft.remarks?.split('\n')[1] || ''); // Simple extraction, or just keep full remarks
+      try {
+        if (existingDraft.checklist_answers) {
+          setChecklistData(JSON.parse(existingDraft.checklist_answers));
+        }
+      } catch (e) {
+        console.error("Failed to parse draft answers", e);
+      }
+    }
+  }, [existingDraft]);
 
   // Fetch device
   const { data: device, isLoading: isLoadingDevice } = useQuery({
@@ -279,18 +311,28 @@ export default function DeviceInspection() {
                   />
                 </div>
 
-                <Button 
-                  className="w-full h-12 text-lg mt-6 bg-emerald-600 hover:bg-emerald-700"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || currentChecklistItems.length === 0}
-                >
-                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                    <>
-                      <Save className="w-5 h-5 ml-2" />
-                      שמור בדיקה
-                    </>
-                  )}
-                </Button>
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  <Button 
+                    variant="outline"
+                    className="h-12 text-lg border-blue-200 text-blue-700 hover:bg-blue-50"
+                    onClick={() => handleSaveDraft(true)}
+                    disabled={isSubmitting}
+                  >
+                    שמור ויציאה
+                  </Button>
+                  <Button 
+                    className="h-12 text-lg bg-emerald-600 hover:bg-emerald-700"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || currentChecklistItems.length === 0}
+                  >
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                      <>
+                        <Save className="w-5 h-5 ml-2" />
+                        סיום והגשה
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

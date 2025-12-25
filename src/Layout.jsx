@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Radio, Star, Calendar, Info } from 'lucide-react';
+import { Radio, Star, Calendar, Info, Users } from 'lucide-react';
 
 export default function Layout({ children, currentPageName }) {
   const navItems = [
     { name: 'Special', label: 'מיוחד', icon: Star },
     { name: 'Routine', label: 'שגרה', icon: Calendar },
     { name: 'Info', label: 'מידע', icon: Info },
+    { name: 'Users', label: 'משתמשים', icon: Users },
   ];
 
   return (
