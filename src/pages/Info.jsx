@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Radio, Shield, AlertTriangle, Info as InfoIcon } from 'lucide-react';
+import { Search, Radio, Shield, AlertTriangle, Info as InfoIcon, Settings } from 'lucide-react';
 
 export default function Info() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,9 +33,17 @@ export default function Info() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6" dir="rtl">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">מידע</h1>
-          <p className="text-slate-500">מידע טכני, נתונים וסטטוסים</p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">מידע</h1>
+            <p className="text-slate-500">מידע טכני, נתונים וסטטוסים</p>
+          </div>
+          <Link to={createPageUrl('ChecklistManager')}>
+             <Button variant="outline" className="gap-2 bg-white hover:bg-slate-50">
+               <Settings className="w-4 h-4" />
+               ניהול רשימות בדיקה
+             </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
