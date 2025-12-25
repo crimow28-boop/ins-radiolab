@@ -189,44 +189,7 @@ export default function Home() {
           )}
         </div>
 
-        <Card className="bg-white border-0 shadow-lg mt-6">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-800">בדיקות אחרונות</h3>
-              <Link to={createPageUrl('InspectionHistory')}>
-                <Button variant="ghost" size="sm" className="hover:bg-slate-50">
-                  לכל הבדיקות
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                </Button>
-              </Link>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {inspections.slice(0, 6).map((inspection) =>
-              <div key={inspection.id} className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-blue-200 transition-colors">
-                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-600 font-bold text-xs border border-slate-100 shrink-0 overflow-hidden" title={inspection.inspection_number}>
-                    {String(inspection.inspection_number).length > 5 ? '#' + String(inspection.inspection_number).slice(-4) : '#' + inspection.inspection_number}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 truncate" title={inspection.soldier_name}>{inspection.soldier_name}</p>
-                    <p className="text-xs text-slate-500 flex items-center gap-1">
-                      <ClipboardList className="w-3 h-3" />
-                      {(inspection.device_serial_numbers || []).length} מכשירים
-                    </p>
-                  </div>
-                  <span className="text-xs font-medium bg-white px-2 py-1 rounded-lg text-slate-500 shadow-sm border border-slate-100 shrink-0">
-                    {format(new Date(inspection.created_date), 'dd/MM')}
-                  </span>
-                </div>
-              )}
-              {inspections.length === 0 &&
-              <div className="col-span-full text-center py-12 text-slate-500">
-                  <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                  <p>אין בדיקות במערכת</p>
-                </div>
-              }
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
     </div>);
 
