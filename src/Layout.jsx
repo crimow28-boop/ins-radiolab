@@ -17,7 +17,7 @@ export default function Layout({ children, currentPageName }) {
       <div className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center">
                 <Radio className="w-5 h-5 text-white" />
               </div>
@@ -25,7 +25,7 @@ export default function Layout({ children, currentPageName }) {
                 <h1 className="font-bold text-slate-800">RadioLab</h1>
                 <p className="text-xs text-slate-500">מערכת בדיקות</p>
               </div>
-            </div>
+            </Link>
             
             {/* Desktop Tabs */}
             <nav className="hidden md:flex items-center gap-2">
