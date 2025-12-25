@@ -266,6 +266,21 @@ export default function InspectionHistory() {
                         ארכיון
                       </div>
                     )}
+                    {user?.role === 'admin' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600 z-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if(confirm('האם למחוק את הכרטיס לצמיתות?')) {
+                            deleteCardMutation.mutate({ id: card.id, type: card.type });
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                     <CardContent className="p-6 flex flex-col items-center text-center gap-4">
                       <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${
                         isArchived ? 'bg-slate-200' : 'bg-blue-50 group-hover:bg-blue-100'
