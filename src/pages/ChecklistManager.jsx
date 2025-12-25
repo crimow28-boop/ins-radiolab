@@ -606,10 +606,19 @@ export default function ChecklistManager() {
                                                             className="h-8 text-sm flex-1 text-right"
                                                           />
                                                         )}
-                                                      </div>
-                                                   </div>
-                                                   <Button
-                                                      variant="ghost"
+                                                        </div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                        <Switch
+                                                          checked={subItem.required}
+                                                          onCheckedChange={(checked) => handleUpdateSubItem(index, subIndex, 'required', checked)}
+                                                          id={`req-${subItem.id}`}
+                                                          className="h-4 w-7"
+                                                        />
+                                                        <Label htmlFor={`req-${subItem.id}`} className="text-xs cursor-pointer text-slate-500">חובה</Label>
+                                                        </div>
+                                                        </div>
+                                                        <Button
+                                                        variant="ghost"
                                                       size="icon"
                                                       className="h-6 w-6 text-slate-400 hover:text-red-600"
                                                       onClick={() => handleRemoveSubItem(index, subIndex)}
