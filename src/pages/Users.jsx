@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, UserPlus, Trash2, Mail } from 'lucide-react';
+import { Loader2, Plus, UserPlus, Trash2, Mail, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +24,7 @@ export default function Users() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteData, setInviteData] = useState({ email: '', role: 'user' });
   const [isInviting, setIsInviting] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
@@ -52,18 +53,27 @@ export default function Users() {
     }
   };
   
-  // Update user name handler (for admins to help set up)
-  const handleUpdateName = async (id, currentName) => {
-    const newName = prompt("הכנס שם מלא חדש:", currentName);
-    if (newName && newName !== currentName) {
-      try {
-        await base44.entities.User.update(id, { full_name: newName });
-        queryClient.invalidateQueries(['users']);
-        toast.success("שם עודכן");
-      } catch (error) {
-        toast.error("שגיאה בעדכון שם");
-      }
+  const updateUserMutation = useMutation({
+    mutationFn: async (data) => {
+       // Separate updates if needed, but usually one call works if fields are supported
+       return base44.entities.User.update(data.id, {
+         full_name: data.full_name,
+         role: data.role
+       });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+      toast.success("פרטי משתמש עודכנו בהצלחה");
+      setEditingUser(null);
+    },
+    onError: () => {
+      toast.error("שגיאה בעדכון משתמש");
     }
+  });
+
+  const handleSaveUser = () => {
+    if (!editingUser) return;
+    updateUserMutation.mutate(editingUser);
   };
 
   if (currentUser?.role !== 'admin') {
@@ -131,6 +141,45 @@ export default function Users() {
               </div>
             </DialogContent>
           </Dialog>
+          <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+            <DialogContent dir="rtl">
+              <DialogHeader>
+                <DialogTitle>עריכת פרטי משתמש</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>שם מלא</Label>
+                  <Input 
+                    value={editingUser?.full_name || ''} 
+                    onChange={(e) => setEditingUser({...editingUser, full_name: e.target.value})}
+                    placeholder="שם מלא"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>תפקיד</Label>
+                  <Select 
+                    value={editingUser?.role} 
+                    onValueChange={(val) => setEditingUser({...editingUser, role: val})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">משתמש רגיל</SelectItem>
+                      <SelectItem value="admin">מנהל מערכת</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button 
+                  className="w-full mt-4" 
+                  onClick={handleSaveUser}
+                  disabled={updateUserMutation.isPending}
+                >
+                  {updateUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'שמור שינויים'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Card>
@@ -171,9 +220,11 @@ export default function Users() {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => handleUpdateName(user.id, user.full_name)}
+                          className="h-8 w-8 p-0"
+                          onClick={() => setEditingUser(user)}
                         >
-                          ערוך שם
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">ערוך</span>
                         </Button>
                       </TableCell>
                     </TableRow>
