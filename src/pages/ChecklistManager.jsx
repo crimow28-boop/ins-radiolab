@@ -441,11 +441,11 @@ export default function ChecklistManager() {
                         <Plus className="w-4 h-4 ml-2" />
                         הוסף סעיף
                     </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="flex justify-center p-8">
+                    </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 overflow-y-auto p-6">
+                    {isLoading ? (
+                    <div className="flex justify-center p-8">
                     <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                   </div>
                 ) : items.length === 0 ? (
