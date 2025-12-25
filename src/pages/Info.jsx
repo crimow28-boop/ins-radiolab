@@ -81,12 +81,14 @@ export default function Info() {
                 אפס הצפנות
               </Button>
             )}
-            <Link to={createPageUrl('ChecklistManager')}>
-               <Button variant="outline" className="gap-2 bg-white hover:bg-slate-50">
-                 <Settings className="w-4 h-4" />
-                 ניהול רשימות בדיקה
-               </Button>
-            </Link>
+            {currentUser?.role === 'admin' && (
+              <Link to={createPageUrl('ChecklistManager')}>
+                 <Button variant="outline" className="gap-2 bg-white hover:bg-slate-50">
+                   <Settings className="w-4 h-4" />
+                   ניהול רשימות בדיקה
+                 </Button>
+              </Link>
+            )}
           </div>
         </div>
 
