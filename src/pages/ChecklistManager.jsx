@@ -251,22 +251,25 @@ export default function ChecklistManager() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6" dir="rtl">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-slate-100/50" dir="rtl">
+      {/* Top Bar */}
+      <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link to={createPageUrl('Home')}>
-              <Button variant="ghost">
-                <ArrowRight className="w-4 h-4 ml-2" />
-                חזרה
+              <Button variant="ghost" size="sm" className="hover:bg-slate-100 rounded-full w-10 h-10 p-0">
+                <ArrowRight className="w-5 h-5 text-slate-600" />
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold text-slate-800">ניהול רשימות בדיקה</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">ניהול רשימות בדיקה</h1>
+              <p className="text-sm text-slate-500 hidden md:block">הגדר ונהל את סעיפי הבדיקה עבור כל סוג מכשיר</p>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+          <div className="flex items-center gap-2">
+             <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="outline" className="gap-2">
+                    <Button variant="outline" className="gap-2 hidden md:flex">
                         <Copy className="w-4 h-4" />
                         שכפל רשימה
                     </Button>
@@ -300,7 +303,7 @@ export default function ChecklistManager() {
 
             <Button 
                 onClick={handleSave} 
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200"
                 disabled={saveMutation.isPending}
             >
                 {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Save className="w-4 h-4 ml-2" />}
@@ -308,25 +311,41 @@ export default function ChecklistManager() {
             </Button>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="md:col-span-1 space-y-2">
-            <Label>בחר סוג מכשיר</Label>
-            <div className="flex flex-col gap-2 bg-white p-2 rounded-xl border">
-              {CHECKLIST_TYPES.map(type => (
-                <Button
-                  key={type.code}
-                  variant={selectedType === type.code ? "secondary" : "ghost"}
-                  className={`justify-start ${selectedType === type.code ? 'bg-blue-50 text-blue-700' : ''}`}
-                  onClick={() => setSelectedType(type.code)}
-                >
-                  {type.name}
-                </Button>
-              ))}
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-140px)]">
+          {/* Sidebar */}
+          <div className="w-full md:w-64 shrink-0 flex flex-col gap-4">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+              <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                <h3 className="font-semibold text-slate-700">סוג מכשיר</h3>
+              </div>
+              <div className="p-2 overflow-y-auto flex-1 space-y-1">
+                {CHECKLIST_TYPES.map(type => (
+                  <button
+                    key={type.code}
+                    onClick={() => setSelectedType(type.code)}
+                    className={`w-full text-right px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      selectedType === type.code 
+                        ? 'bg-blue-50 text-blue-700 shadow-sm' 
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {type.name}
+                  </button>
+                ))}
+              </div>
             </div>
+            
+            <Button variant="outline" className="md:hidden w-full gap-2" onClick={() => setDuplicateDialogOpen(true)}>
+               <Copy className="w-4 h-4" />
+               שכפל רשימה
+            </Button>
           </div>
 
-          <div className="md:col-span-3">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0 h-full overflow-hidden flex flex-col">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>עריכת סעיפים - {CHECKLIST_TYPES.find(t => t.code === selectedType)?.name}</CardTitle>

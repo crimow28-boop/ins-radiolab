@@ -150,13 +150,45 @@ export default function Home() {
 
 
 
+        <div className="grid md:grid-cols-2 gap-4 mt-8">
+          <Link to={createPageUrl('InspectionHistory')}>
+            <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all cursor-pointer h-full group">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                  <History className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">היסטוריית בדיקות</h3>
+                  <p className="text-slate-500 text-sm">צפה בכל הבדיקות שבוצעו במערכת</p>
+                </div>
+                <ArrowLeft className="w-5 h-5 mr-auto text-slate-300 group-hover:text-purple-500 transition-colors" />
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to={createPageUrl('ChecklistManager')}>
+            <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all cursor-pointer h-full group">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <ClipboardList className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">ניהול רשימות בדיקה</h3>
+                  <p className="text-slate-500 text-sm">הגדרת טפסים וסעיפי בדיקה</p>
+                </div>
+                <ArrowLeft className="w-5 h-5 mr-auto text-slate-300 group-hover:text-blue-500 transition-colors" />
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
         <Card className="bg-white border-0 shadow-lg mt-6">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-slate-800">בדיקות אחרונות</h3>
               <Link to={createPageUrl('InspectionHistory')}>
-                <Button variant="outline" size="sm" className="rounded-full hover:bg-slate-50">
-                  צפה בהכל
+                <Button variant="ghost" size="sm" className="hover:bg-slate-50">
+                  לכל הבדיקות
                   <ArrowLeft className="w-4 h-4 mr-2" />
                 </Button>
               </Link>
@@ -164,17 +196,18 @@ export default function Home() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {inspections.slice(0, 6).map((inspection) =>
               <div key={inspection.id} className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-blue-200 transition-colors">
-                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-600 font-bold border border-slate-100">
-                    #{inspection.inspection_number}
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-600 font-bold text-xs border border-slate-100 shrink-0">
+                    {/* Shorten inspection number for display */}
+                    #{String(inspection.inspection_number).slice(-6)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 truncate">{inspection.soldier_name}</p>
+                    <p className="font-semibold text-slate-800 truncate" title={inspection.soldier_name}>{inspection.soldier_name}</p>
                     <p className="text-xs text-slate-500 flex items-center gap-1">
                       <ClipboardList className="w-3 h-3" />
                       {(inspection.device_serial_numbers || []).length} מכשירים
                     </p>
                   </div>
-                  <span className="text-xs font-medium bg-white px-2 py-1 rounded-lg text-slate-500 shadow-sm border border-slate-100">
+                  <span className="text-xs font-medium bg-white px-2 py-1 rounded-lg text-slate-500 shadow-sm border border-slate-100 shrink-0">
                     {format(new Date(inspection.created_date), 'dd/MM')}
                   </span>
                 </div>

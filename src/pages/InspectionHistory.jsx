@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,8 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -29,9 +31,24 @@ export default function InspectionHistory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInspection, setSelectedInspection] = useState(null);
 
+  const queryClient = useQueryClient();
+  const { data: user } = useQuery({ queryKey: ['user'], queryFn: () => base44.auth.me().catch(() => null) });
+
   const { data: inspections = [], isLoading } = useQuery({
     queryKey: ['inspections'],
     queryFn: () => base44.entities.Inspection.list('-created_date'),
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+       const promises = inspections.map(i => base44.entities.Inspection.delete(i.id));
+       await Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inspections'] });
+      toast.success('כל הבדיקות נמחקו בהצלחה');
+    },
+    onError: () => toast.error('שגיאה במחיקת הבדיקות')
   });
 
   const filteredInspections = inspections.filter(insp => {
@@ -74,6 +91,21 @@ export default function InspectionHistory() {
               </div>
             </div>
           </div>
+          {user?.role === 'admin' && inspections.length > 0 && (
+             <Button 
+               variant="destructive" 
+               className="gap-2"
+               onClick={() => {
+                 if(confirm("פעולה זו תמחק את כל היסטוריית הבדיקות לצמיתות. האם להמשיך?")) {
+                    deleteAllMutation.mutate();
+                 }
+               }}
+               disabled={deleteAllMutation.isPending}
+             >
+               {deleteAllMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+               מחק הכל
+             </Button>
+          )}
         </div>
       </div>
 
@@ -115,8 +147,8 @@ export default function InspectionHistory() {
                 <div className="group bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer" onClick={() => setSelectedInspection(inspection)}>
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700 font-bold border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                        #{inspection.inspection_number}
+                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700 font-bold text-xs border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                        #{String(inspection.inspection_number).slice(-6)}
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-3 mb-1">
