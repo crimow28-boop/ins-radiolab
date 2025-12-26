@@ -129,7 +129,7 @@ export default function Special() {
   if (selectedCard) {
     const cardDevices = selectedCard.devices || [];
     const allCompleted = cardDevices.length > 0 && cardDevices.every(serial => {
-       const { status } = getDeviceProgress(serial);
+       const { status } = getCardDeviceProgress(serial, selectedCard.id);
        return status === 'completed';
     });
 
