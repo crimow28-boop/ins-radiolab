@@ -167,11 +167,7 @@ export default function Special() {
                     key={serial} 
                     onClick={() => {
                       if (!managerMode) {
-                        if (isFailed) {
-                           setDeviceToReplace({ serial, cardId: selectedCard.id });
-                        } else {
-                           navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=special&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
-                        }
+                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=special&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
                       }
                     }}
                     className={`p-4 border border-slate-400 flex flex-col items-center justify-center gap-2 text-center shadow-sm cursor-pointer hover:bg-slate-50 ${
