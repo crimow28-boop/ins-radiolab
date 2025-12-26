@@ -86,6 +86,16 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-800">{device.serial_number}</span>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-[10px] px-1.5 py-0 h-5 ${
+                        status === 'completed' 
+                          ? 'bg-green-50 text-green-700 border-green-200' 
+                          : 'bg-red-50 text-red-700 border-red-200'
+                      }`}
+                    >
+                      {status === 'completed' ? 'הושלם' : 'ממתין'}
+                    </Badge>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
                     {device.device_name || device.device_group}
