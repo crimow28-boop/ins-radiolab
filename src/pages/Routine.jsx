@@ -503,7 +503,7 @@ export default function Routine() {
                           return;
                        }
                        
-                       const targetCard = routineCards.find(c => c.id === deviceToReplace.cardId);
+                       const targetCard = cards.find(c => c.id === deviceToReplace.cardId);
                        if (!targetCard) return;
                        
                        const currentDevices = targetCard.devices || [];
