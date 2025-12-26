@@ -62,15 +62,18 @@ export default function Routine() {
      const deviceInspections = inspections.filter(i => 
        i.device_serial_numbers?.includes(serial) && 
        i.card_id === cardId
-     );
+     ).sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
      
      if (!deviceInspections.length) return { status: 'none', progress: 0 };
      
-     const draft = deviceInspections.find(i => i.status === 'draft');
-     if (draft) return { status: 'draft', progress: draft.progress || 0 };
+     const latest = deviceInspections[0];
      
-     const completed = deviceInspections.filter(i => i.status === 'completed' || !i.status);
-     if (completed.length > 0) return { status: 'completed', progress: 100 };
+     if (latest.status === 'draft') return { status: 'draft', progress: latest.progress || 0 };
+     
+     if (latest.status === 'completed' || !latest.status) {
+         if (latest.cavad_status === 'failed') return { status: 'failed', progress: 100 };
+         return { status: 'completed', progress: 100 };
+     }
      
      return { status: 'none', progress: 0 };
   };
