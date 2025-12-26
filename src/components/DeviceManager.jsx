@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Trash2, CheckCheck, X, Circle } from 'lucide-react';
 
-export default function DeviceManager({ devices, selectedDevices, onUpdate, onCancel }) {
+export default function DeviceManager({ devices, selectedDevices, onUpdate, onCancel, singleSelection = false }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [localSelected, setLocalSelected] = useState(selectedDevices);
 
@@ -16,6 +16,10 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
   );
 
   const toggleDevice = (serial) => {
+    if (singleSelection) {
+      onUpdate([serial]);
+      return;
+    }
     if (localSelected.includes(serial)) {
       setLocalSelected(localSelected.filter(s => s !== serial));
     } else {
