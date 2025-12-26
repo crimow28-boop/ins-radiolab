@@ -495,6 +495,7 @@ export default function Special() {
                  <DeviceManager
                     devices={devices}
                     selectedDevices={[deviceToReplace.serial]}
+                    singleSelection={true}
                     onUpdate={(updatedDevices) => {
                        if (updatedDevices.length !== 1) {
                           toast.error("אנא בחר מכשיר אחד בלבד להחלפה");
