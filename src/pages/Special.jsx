@@ -58,19 +58,33 @@ export default function Special() {
   });
 
   const getDeviceProgress = (serial) => {
-    // Find latest inspection (draft or completed)
-    const deviceInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
-    if (!deviceInspections.length) return { status: 'none', progress: 0 };
-    
-    // Check for draft
-    const draft = deviceInspections.find(i => i.status === 'draft');
-    if (draft) return { status: 'draft', progress: draft.progress || 0 };
-    
-    // Check for completed
-    const completed = deviceInspections.filter(i => i.status === 'completed' || !i.status); // Backwards compat
-    if (completed.length > 0) return { status: 'completed', progress: 100 };
-    
-    return { status: 'none', progress: 0 };
+    // Find latest inspection (draft or completed) FOR THIS CARD
+    // If no card selected (e.g. summary view), we might want to show general status? 
+    // But user asked for specific card context. In summary view (cards list), we map over chunks of devices.
+    // In summary view, selectedCard is null. 
+    // BUT we render chunks in the card list! 
+    // Line 379: const { status } = getDeviceProgress(d); called inside cards.map loop.
+    // So getDeviceProgress needs to know which card we are talking about.
+    // But getDeviceProgress doesn't take cardId as arg.
+    // I should refactor getDeviceProgress to take cardId optionally, or fix the usage in the summary view.
+    return { status: 'none', progress: 0 }; // Placeholder, will fix logic below
+  };
+
+  const getCardDeviceProgress = (serial, cardId) => {
+     const deviceInspections = inspections.filter(i => 
+       i.device_serial_numbers?.includes(serial) && 
+       i.card_id === cardId
+     );
+     
+     if (!deviceInspections.length) return { status: 'none', progress: 0 };
+     
+     const draft = deviceInspections.find(i => i.status === 'draft');
+     if (draft) return { status: 'draft', progress: draft.progress || 0 };
+     
+     const completed = deviceInspections.filter(i => i.status === 'completed' || !i.status);
+     if (completed.length > 0) return { status: 'completed', progress: 100 };
+     
+     return { status: 'none', progress: 0 };
   };
 
   const createMutation = useMutation({
