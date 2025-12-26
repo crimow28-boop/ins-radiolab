@@ -33,16 +33,14 @@ export default function DeviceInspection() {
 
   // Fetch existing draft
   const { data: existingDraft } = useQuery({
-    queryKey: ['inspection_draft', serialNumber],
+    queryKey: ['inspection_draft', serialNumber, cardId],
     queryFn: async () => {
-       const res = await base44.entities.Inspection.filter({ 
-         status: 'draft',
-         // We need to filter by serial number manually or use a more complex query if supported
-         // Assuming device_serial_numbers is an array, exact match might be tricky in basic filter if not handled
-         // We will filter client side if needed or rely on the fact we usually have one draft per device
-       });
+       const query = { status: 'draft' };
+       if (cardId) query.card_id = cardId;
+
+       const res = await base44.entities.Inspection.filter(query);
        // Filter for this specific device
-       return res.find(d => d.device_serial_numbers?.includes(serialNumber));
+       return res.find(d => d.device_serial_numbers?.includes(serialNumber) && (cardId ? d.card_id === cardId : !d.card_id));
     },
     enabled: !!serialNumber,
   });
