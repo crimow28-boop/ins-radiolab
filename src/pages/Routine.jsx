@@ -153,35 +153,45 @@ export default function Routine() {
                 const { status, progress } = getCardDeviceProgress(serial, selectedCard.id);
                 const isCompleted = status === 'completed';
                 const isDraft = status === 'draft';
+                const isFailed = status === 'failed';
                 
                 return (
                   <div 
                     key={serial} 
                     onClick={() => {
                       if (!managerMode) {
-                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=routine&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
+                        if (isFailed) {
+                           setDeviceToReplace({ serial, cardId: selectedCard.id });
+                        } else {
+                           navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=routine&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
+                        }
                       }
                     }}
                     className={`p-4 border border-slate-400 flex flex-col items-center justify-center gap-2 text-center shadow-sm cursor-pointer hover:bg-slate-50 ${
-                      isCompleted ? 'bg-emerald-50' : 'bg-white'
+                      isCompleted ? 'bg-emerald-50' : isFailed ? 'bg-red-50' : 'bg-white'
                     }`}
                   >
                     <span className="font-mono font-bold text-lg text-slate-800">{serial}</span>
                     
                     <div className="w-full bg-slate-200 h-2 mt-1">
                       <div 
-                        className={`h-2 transition-all ${isCompleted ? 'bg-emerald-500' : 'bg-blue-500'}`} 
+                        className={`h-2 transition-all ${isCompleted ? 'bg-emerald-500' : isFailed ? 'bg-red-500' : 'bg-blue-500'}`} 
                         style={{ width: `${progress}%` }}
                       ></div>
                     </div>
                     
                     <div className={`flex items-center gap-1 text-xs font-medium ${
-                      isCompleted ? 'text-emerald-700' : (isDraft ? 'text-blue-700' : 'text-slate-500')
+                      isCompleted ? 'text-emerald-700' : isFailed ? 'text-red-700' : (isDraft ? 'text-blue-700' : 'text-slate-500')
                     }`}>
                       {isCompleted ? (
                         <>
                           <CheckCircle className="w-3 h-3" />
                           <span>הושלם</span>
+                        </>
+                      ) : isFailed ? (
+                        <>
+                          <XCircle className="w-3 h-3" />
+                          <span>נכשל</span>
                         </>
                       ) : isDraft ? (
                         <>
