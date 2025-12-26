@@ -146,7 +146,7 @@ export default function Routine() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-4">
               {cardDevices.map((serial) => {
-                const { status, progress } = getDeviceProgress(serial);
+                const { status, progress } = getCardDeviceProgress(serial, selectedCard.id);
                 const isCompleted = status === 'completed';
                 const isDraft = status === 'draft';
                 
