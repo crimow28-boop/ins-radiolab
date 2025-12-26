@@ -96,7 +96,17 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
         </div>
       </ScrollArea>
 
-      {!singleSelection && (
+      {singleSelection ? (
+        <div className="flex-shrink-0 pt-2">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="h-12 rounded-xl border-slate-200 text-slate-600 w-full"
+          >
+            ביטול
+          </Button>
+        </div>
+      ) : (
         <div className="flex-shrink-0 pt-2 grid grid-cols-2 gap-3">
           <Button
             onClick={() => onUpdate(localSelected)}
