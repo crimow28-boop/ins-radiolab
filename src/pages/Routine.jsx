@@ -296,6 +296,56 @@ export default function Routine() {
               </DialogContent>
             </Dialog>
           )}
+
+          {deviceToReplace && (
+            <Dialog open={!!deviceToReplace} onOpenChange={() => setDeviceToReplace(null)}>
+               <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-4 sm:p-6" dir="rtl">
+                 <DialogHeader className="flex-shrink-0">
+                    <DialogTitle>החלפת מכשיר {deviceToReplace.serial}</DialogTitle>
+                 </DialogHeader>
+                 <div className="p-4 bg-amber-50 text-amber-800 rounded-lg mb-2 text-sm">
+                    המכשיר הנוכחי נכשל בבדיקה. אנא בחר מכשיר חלופי מהרשימה.
+                    יש לבחור מכשיר אחד בלבד וללחוץ על "עדכן".
+                 </div>
+                 <div className="flex-1 overflow-hidden min-h-0 mt-2">
+                   <DeviceManager
+                      devices={devices}
+                      selectedDevices={[deviceToReplace.serial]}
+                      onUpdate={(updatedDevices) => {
+                         if (updatedDevices.length !== 1) {
+                            toast.error("אנא בחר מכשיר אחד בלבד להחלפה");
+                            return;
+                         }
+                         
+                         const newSerial = updatedDevices[0];
+                         
+                         if (newSerial === deviceToReplace.serial) {
+                            toast.error("אנא בחר מכשיר אחר");
+                            return;
+                         }
+                         
+                         const targetCard = cards.find(c => c.id === deviceToReplace.cardId);
+                         if (!targetCard) return;
+                         
+                         const currentDevices = targetCard.devices || [];
+                         const newDeviceList = currentDevices.map(d => d === deviceToReplace.serial ? newSerial : d);
+                         
+                         updateMutation.mutate({
+                            id: targetCard.id,
+                            data: { devices: newDeviceList }
+                         });
+                         
+                         setSelectedCard({ ...targetCard, devices: newDeviceList });
+                         
+                         toast.success(`המכשיר הוחלף בהצלחה ל-${newSerial}`);
+                         setDeviceToReplace(null);
+                      }}
+                      onCancel={() => setDeviceToReplace(null)}
+                   />
+                 </div>
+               </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
     );
@@ -476,57 +526,6 @@ export default function Routine() {
           </Dialog>
         )}
 
-        {deviceToReplace && (
-          <Dialog open={!!deviceToReplace} onOpenChange={() => setDeviceToReplace(null)}>
-             <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-4 sm:p-6" dir="rtl">
-               <DialogHeader className="flex-shrink-0">
-                  <DialogTitle>החלפת מכשיר {deviceToReplace.serial}</DialogTitle>
-               </DialogHeader>
-               <div className="p-4 bg-amber-50 text-amber-800 rounded-lg mb-2 text-sm">
-                  המכשיר הנוכחי נכשל בבדיקה. אנא בחר מכשיר חלופי מהרשימה.
-                  יש לבחור מכשיר אחד בלבד וללחוץ על "עדכן".
-               </div>
-               <div className="flex-1 overflow-hidden min-h-0 mt-2">
-                 <DeviceManager
-                    devices={devices}
-                    selectedDevices={[deviceToReplace.serial]}
-                    onUpdate={(updatedDevices) => {
-                       if (updatedDevices.length !== 1) {
-                          toast.error("אנא בחר מכשיר אחד בלבד להחלפה");
-                          return;
-                       }
-                       
-                       const newSerial = updatedDevices[0];
-                       
-                       if (newSerial === deviceToReplace.serial) {
-                          toast.error("אנא בחר מכשיר אחר");
-                          return;
-                       }
-                       
-                       const targetCard = cards.find(c => c.id === deviceToReplace.cardId);
-                       if (!targetCard) return;
-                       
-                       const currentDevices = targetCard.devices || [];
-                       const newDeviceList = currentDevices.map(d => d === deviceToReplace.serial ? newSerial : d);
-                       
-                       updateMutation.mutate({
-                          id: targetCard.id,
-                          data: { devices: newDeviceList }
-                       });
-                       
-                       if (selectedCard?.id === targetCard.id) {
-                          setSelectedCard({ ...targetCard, devices: newDeviceList });
-                       }
-                       
-                       toast.success(`המכשיר הוחלף בהצלחה ל-${newSerial}`);
-                       setDeviceToReplace(null);
-                    }}
-                    onCancel={() => setDeviceToReplace(null)}
-                 />
-               </div>
-             </DialogContent>
-          </Dialog>
-        )}
       </div>
     </div>
   );
