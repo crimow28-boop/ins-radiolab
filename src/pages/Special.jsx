@@ -34,10 +34,12 @@ export default function Special() {
     queryFn: () => base44.auth.me().catch(() => null),
   });
 
-  const { data: cards = [] } = useQuery({
+  const { data: specialCards = [] } = useQuery({
     queryKey: ['specialCards'],
     queryFn: () => base44.entities.SpecialCard.filter({ is_active: true }, 'order'),
   });
+  
+  const cards = specialCards;
 
   const { data: devices = [] } = useQuery({
     queryKey: ['devices'],
