@@ -490,6 +490,7 @@ export default function Routine() {
                  <DeviceManager
                     devices={devices}
                     selectedDevices={[deviceToReplace.serial]}
+                    singleSelection={true}
                     onUpdate={(updatedDevices) => {
                        // Validation: ensure user selected exactly one device (the new one)
                        // Or maybe we allow multi-select but the goal is to replace.
