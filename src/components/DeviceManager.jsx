@@ -17,6 +17,7 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
 
   const toggleDevice = (serial) => {
     if (singleSelection) {
+      setLocalSelected([serial]); // Visual feedback
       onUpdate([serial]);
       return;
     }
@@ -74,7 +75,10 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
             return (
               <div
                 key={device.id}
-                onClick={() => toggleDevice(device.serial_number)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleDevice(device.serial_number);
+                }}
                 className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
                   isSelected 
                     ? 'bg-blue-50 border-blue-200 shadow-sm' 

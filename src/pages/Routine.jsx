@@ -483,8 +483,7 @@ export default function Routine() {
                   <DialogTitle>החלפת מכשיר {deviceToReplace.serial}</DialogTitle>
                </DialogHeader>
                <div className="p-4 bg-amber-50 text-amber-800 rounded-lg mb-2 text-sm">
-                  המכשיר הנוכחי נכשל בבדיקה. אנא בחר מכשיר חלופי מהרשימה.
-                  יש לבחור מכשיר אחד בלבד וללחוץ על "עדכן".
+                  המכשיר הנוכחי נכשל בבדיקה. אנא לחץ על מכשיר חלופי מהרשימה כדי להחליפו.
                </div>
                <div className="flex-1 overflow-hidden min-h-0 mt-2">
                  <DeviceManager
