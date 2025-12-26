@@ -27,6 +27,7 @@ export default function Special() {
   const [manageDevices, setManageDevices] = useState(null);
   const [pinCode, setPinCode] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [deviceToReplace, setDeviceToReplace] = useState(null);
 
   const { data: user } = useQuery({
     queryKey: ['user'],
