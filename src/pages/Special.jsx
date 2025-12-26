@@ -58,18 +58,14 @@ export default function Special() {
   });
 
   const getDeviceProgress = (serial) => {
-    // Find latest inspection (draft or completed)
+    // Only check for active drafts
     const deviceInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
-    if (!deviceInspections.length) return { status: 'none', progress: 0 };
     
     // Check for draft
     const draft = deviceInspections.find(i => i.status === 'draft');
     if (draft) return { status: 'draft', progress: draft.progress || 0 };
     
-    // Check for completed
-    const completed = deviceInspections.filter(i => i.status === 'completed' || !i.status); // Backwards compat
-    if (completed.length > 0) return { status: 'completed', progress: 100 };
-    
+    // No concept of completed at device level
     return { status: 'none', progress: 0 };
   };
 
