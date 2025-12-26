@@ -92,6 +92,32 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
   return (
     <div className="flex flex-col h-full overflow-hidden space-y-3">
       <div className="flex-shrink-0 space-y-3 bg-white pb-2 z-10">
+        {/* Bulk Input Bar */}
+        <div className="bg-amber-100 rounded-2xl p-3 border border-amber-200">
+          <p className="text-xs text-amber-800 mb-2 text-right font-medium">
+            # ניפוק וחיסול מכשירים
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleBulkAdd}
+              className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl px-4"
+            >
+              <Plus className="w-4 h-4 ml-1" />
+              הוסף
+            </Button>
+            <Input
+              value={bulkInput}
+              onChange={(e) => setBulkInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleBulkAdd()}
+              placeholder="הזן מספרים: 1 50 100 23-30 • תומך בטווחים ומספרים בודדים"
+              className="flex-1 h-9 rounded-xl border-amber-300 bg-white text-sm text-right"
+              dir="ltr"
+            />
+          </div>
+        </div>
+
         <div className="relative group">
           <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
           <Input
