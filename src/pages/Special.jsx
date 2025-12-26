@@ -58,14 +58,18 @@ export default function Special() {
   });
 
   const getDeviceProgress = (serial) => {
-    // Only check for active drafts
+    // Find latest inspection (draft or completed)
     const deviceInspections = inspections.filter(i => i.device_serial_numbers?.includes(serial));
+    if (!deviceInspections.length) return { status: 'none', progress: 0 };
     
     // Check for draft
     const draft = deviceInspections.find(i => i.status === 'draft');
     if (draft) return { status: 'draft', progress: draft.progress || 0 };
     
-    // No concept of completed at device level
+    // Check for completed
+    const completed = deviceInspections.filter(i => i.status === 'completed' || !i.status); // Backwards compat
+    if (completed.length > 0) return { status: 'completed', progress: 100 };
+    
     return { status: 'none', progress: 0 };
   };
 
@@ -97,17 +101,11 @@ export default function Special() {
       // Rotate PIN
       const newPin = Math.floor(1000 + Math.random() * 9000).toString();
       await base44.entities.SystemSettings.update(res[0].id, { value: newPin });
-      
-      // Archive the card (Reset active view)
-      if (selectedCard) {
-        await base44.entities.SpecialCard.update(selectedCard.id, { is_active: false });
-        queryClient.invalidateQueries({ queryKey: ['specialCards'] });
-        setSelectedCard(null);
-        toast.success("הכרטיס אושר והועבר להיסטוריה");
-      }
-
       refetchPin();
       setPinCode('');
+      
+      // Here you might want to mark the card as "Approved" in the database
+      // For now we just show success
     } else {
       setPinError(true);
       toast.error("קוד שגוי");
