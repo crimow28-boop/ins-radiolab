@@ -491,12 +491,6 @@ export default function Routine() {
                     devices={devices}
                     selectedDevices={[deviceToReplace.serial]}
                     onUpdate={(updatedDevices) => {
-                       // Validation: ensure user selected exactly one device (the new one)
-                       // Or maybe we allow multi-select but the goal is to replace.
-                       // Updated devices contains the list of CHECKED devices.
-                       // User should uncheck the old one and check the new one.
-                       // So updatedDevices should contain only the new device serial.
-                       
                        if (updatedDevices.length !== 1) {
                           toast.error("אנא בחר מכשיר אחד בלבד להחלפה");
                           return;
@@ -504,23 +498,25 @@ export default function Routine() {
                        
                        const newSerial = updatedDevices[0];
                        
-                       // If same device selected
                        if (newSerial === deviceToReplace.serial) {
                           toast.error("אנא בחר מכשיר אחר");
                           return;
                        }
                        
-                       // Replace in card
-                       const currentDevices = selectedCard.devices || [];
+                       const targetCard = routineCards.find(c => c.id === deviceToReplace.cardId);
+                       if (!targetCard) return;
+                       
+                       const currentDevices = targetCard.devices || [];
                        const newDeviceList = currentDevices.map(d => d === deviceToReplace.serial ? newSerial : d);
                        
                        updateMutation.mutate({
-                          id: selectedCard.id,
+                          id: targetCard.id,
                           data: { devices: newDeviceList }
                        });
                        
-                       // Update local state
-                       setSelectedCard({ ...selectedCard, devices: newDeviceList });
+                       if (selectedCard?.id === targetCard.id) {
+                          setSelectedCard({ ...targetCard, devices: newDeviceList });
+                       }
                        
                        toast.success(`המכשיר הוחלף בהצלחה ל-${newSerial}`);
                        setDeviceToReplace(null);
