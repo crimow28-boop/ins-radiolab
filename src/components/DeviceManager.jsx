@@ -33,11 +33,7 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
     setLocalSelected([]);
   };
 
-  const getDeviceStatus = (device) => {
-    // ירוק אם יש בדיקות, אדום אם אין
-    const hasInspections = (device.total_inspections || 0) > 0;
-    return hasInspections ? 'completed' : 'incomplete';
-  };
+
 
   return (
     <div className="flex flex-col h-full overflow-hidden space-y-3">
