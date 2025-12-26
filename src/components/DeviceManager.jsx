@@ -4,11 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Trash2, CheckCheck, X, Circle } from 'lucide-react';
+import { Search, Trash2, CheckCheck, X, Circle, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function DeviceManager({ devices, selectedDevices, onUpdate, onCancel }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [localSelected, setLocalSelected] = useState(selectedDevices);
+  const [bulkInput, setBulkInput] = useState('');
 
   const filteredDevices = devices.filter(device =>
     device.serial_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -31,6 +33,58 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
 
   const clearAll = () => {
     setLocalSelected([]);
+  };
+
+  // Parse bulk input - supports ranges (e.g., "1-5") and individual numbers separated by spaces
+  const handleBulkAdd = () => {
+    if (!bulkInput.trim()) return;
+    
+    const allDeviceSerials = devices.map(d => d.serial_number);
+    const newSelections = [];
+    
+    // Split by spaces, commas, or asterisks
+    const parts = bulkInput.split(/[\s,*]+/).filter(Boolean);
+    
+    parts.forEach(part => {
+      // Check if it's a range (e.g., "10-15" or "801000-801005")
+      if (part.includes('-')) {
+        const [start, end] = part.split('-').map(s => s.trim());
+        
+        // Find devices that fall within this range
+        allDeviceSerials.forEach(serial => {
+          // Try numeric comparison if both are numbers
+          const serialNum = parseInt(serial);
+          const startNum = parseInt(start);
+          const endNum = parseInt(end);
+          
+          if (!isNaN(serialNum) && !isNaN(startNum) && !isNaN(endNum)) {
+            if (serialNum >= startNum && serialNum <= endNum) {
+              newSelections.push(serial);
+            }
+          } else {
+            // String comparison fallback
+            if (serial >= start && serial <= end) {
+              newSelections.push(serial);
+            }
+          }
+        });
+      } else {
+        // Single value - find exact or partial match
+        const matchingDevices = allDeviceSerials.filter(serial => 
+          serial === part || serial.includes(part)
+        );
+        newSelections.push(...matchingDevices);
+      }
+    });
+    
+    if (newSelections.length > 0) {
+      const combined = [...new Set([...localSelected, ...newSelections])];
+      setLocalSelected(combined);
+      toast.success(`נוספו ${newSelections.length} מכשירים`);
+      setBulkInput('');
+    } else {
+      toast.error('לא נמצאו מכשירים תואמים');
+    }
   };
 
 
