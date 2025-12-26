@@ -33,16 +33,29 @@ export default function DeviceInspection() {
 
   // Fetch existing draft
   const { data: existingDraft } = useQuery({
-    queryKey: ['inspection_draft', serialNumber],
+    queryKey: ['inspection_draft', serialNumber, cardId],
     queryFn: async () => {
-       const res = await base44.entities.Inspection.filter({ 
-         status: 'draft',
-         // We need to filter by serial number manually or use a more complex query if supported
-         // Assuming device_serial_numbers is an array, exact match might be tricky in basic filter if not handled
-         // We will filter client side if needed or rely on the fact we usually have one draft per device
+       const filters = { status: 'draft' };
+       if (cardId) {
+         filters.card_id = cardId;
+       } else {
+         // If no cardId (general inspection), filter for inspections with no card_id?
+         // Or should we allow finding drafts that match serial regardless?
+         // User requirement: "Checklist is scoped to specific Inspection Card".
+         // So if I am in "General" mode (no cardId), I should NOT see drafts from a Card.
+         // Unfortunately, base44 filtering on null might be tricky or we can filter client side.
+       }
+
+       const res = await base44.entities.Inspection.filter(filters);
+
+       // Client side filtering for exact match
+       return res.find(d => {
+         const matchSerial = d.device_serial_numbers?.includes(serialNumber);
+         // If we are in a card context, ensure draft has matching card_id
+         if (cardId) return matchSerial && d.card_id === cardId;
+         // If we are NOT in a card context, ensure draft has NO card_id
+         return matchSerial && !d.card_id;
        });
-       // Filter for this specific device
-       return res.find(d => d.device_serial_numbers?.includes(serialNumber));
     },
     enabled: !!serialNumber,
   });
