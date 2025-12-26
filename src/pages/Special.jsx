@@ -97,11 +97,17 @@ export default function Special() {
       // Rotate PIN
       const newPin = Math.floor(1000 + Math.random() * 9000).toString();
       await base44.entities.SystemSettings.update(res[0].id, { value: newPin });
+      
+      // Archive the card (Reset active view)
+      if (selectedCard) {
+        await base44.entities.SpecialCard.update(selectedCard.id, { is_active: false });
+        queryClient.invalidateQueries({ queryKey: ['specialCards'] });
+        setSelectedCard(null);
+        toast.success("הכרטיס אושר והועבר להיסטוריה");
+      }
+
       refetchPin();
       setPinCode('');
-      
-      // Here you might want to mark the card as "Approved" in the database
-      // For now we just show success
     } else {
       setPinError(true);
       toast.error("קוד שגוי");
