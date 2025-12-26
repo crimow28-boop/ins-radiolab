@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Trash2, CheckCheck, X, Circle } from 'lucide-react';
 
-export default function DeviceManager({ devices, selectedDevices, onUpdate, onCancel, singleSelection = false }) {
+export default function DeviceManager({ devices, selectedDevices, onUpdate, onCancel }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [localSelected, setLocalSelected] = useState(selectedDevices);
 
@@ -16,11 +16,6 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
   );
 
   const toggleDevice = (serial) => {
-    if (singleSelection) {
-      setLocalSelected([serial]); // Visual feedback
-      onUpdate([serial]);
-      return;
-    }
     if (localSelected.includes(serial)) {
       setLocalSelected(localSelected.filter(s => s !== serial));
     } else {
@@ -75,10 +70,7 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
             return (
               <div
                 key={device.id}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleDevice(device.serial_number);
-                }}
+                onClick={() => toggleDevice(device.serial_number)}
                 className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
                   isSelected 
                     ? 'bg-blue-50 border-blue-200 shadow-sm' 
@@ -100,33 +92,21 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
         </div>
       </ScrollArea>
 
-      {singleSelection ? (
-        <div className="flex-shrink-0 pt-2">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            className="h-12 rounded-xl border-slate-200 text-slate-600 w-full"
-          >
-            ביטול
-          </Button>
-        </div>
-      ) : (
-        <div className="flex-shrink-0 pt-2 grid grid-cols-2 gap-3">
-          <Button
-            onClick={() => onUpdate(localSelected)}
-            className="h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-lg font-medium"
-          >
-            עדכן ({localSelected.length})
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            className="h-12 rounded-xl border-slate-200 text-slate-600"
-          >
-            ביטול
-          </Button>
-        </div>
-      )}
+      <div className="flex-shrink-0 pt-2 grid grid-cols-2 gap-3">
+        <Button
+          onClick={() => onUpdate(localSelected)}
+          className="h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-lg font-medium"
+        >
+          עדכן ({localSelected.length})
+        </Button>
+        <Button
+          variant="outline"
+          onClick={onCancel}
+          className="h-12 rounded-xl border-slate-200 text-slate-600"
+        >
+          ביטול
+        </Button>
+      </div>
     </div>
   );
 }

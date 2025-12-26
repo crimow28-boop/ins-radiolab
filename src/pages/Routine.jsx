@@ -160,7 +160,11 @@ export default function Routine() {
                     key={serial} 
                     onClick={() => {
                       if (!managerMode) {
-                        navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=routine&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
+                        if (isFailed) {
+                           setDeviceToReplace({ serial, cardId: selectedCard.id });
+                        } else {
+                           navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=routine&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
+                        }
                       }
                     }}
                     className={`p-4 border border-slate-400 flex flex-col items-center justify-center gap-2 text-center shadow-sm cursor-pointer hover:bg-slate-50 ${
@@ -479,13 +483,13 @@ export default function Routine() {
                   <DialogTitle>החלפת מכשיר {deviceToReplace.serial}</DialogTitle>
                </DialogHeader>
                <div className="p-4 bg-amber-50 text-amber-800 rounded-lg mb-2 text-sm">
-                  המכשיר הנוכחי נכשל בבדיקה. אנא לחץ על מכשיר חלופי מהרשימה כדי להחליפו.
+                  המכשיר הנוכחי נכשל בבדיקה. אנא בחר מכשיר חלופי מהרשימה.
+                  יש לבחור מכשיר אחד בלבד וללחוץ על "עדכן".
                </div>
                <div className="flex-1 overflow-hidden min-h-0 mt-2">
                  <DeviceManager
                     devices={devices}
                     selectedDevices={[deviceToReplace.serial]}
-                    singleSelection={true}
                     onUpdate={(updatedDevices) => {
                        // Validation: ensure user selected exactly one device (the new one)
                        // Or maybe we allow multi-select but the goal is to replace.
