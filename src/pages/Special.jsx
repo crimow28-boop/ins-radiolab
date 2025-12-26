@@ -508,15 +508,20 @@ export default function Special() {
                           return;
                        }
                        
-                       const currentDevices = selectedCard.devices || [];
+                       const targetCard = specialCards.find(c => c.id === deviceToReplace.cardId);
+                       if (!targetCard) return;
+                       
+                       const currentDevices = targetCard.devices || [];
                        const newDeviceList = currentDevices.map(d => d === deviceToReplace.serial ? newSerial : d);
                        
                        updateMutation.mutate({
-                          id: selectedCard.id,
+                          id: targetCard.id,
                           data: { devices: newDeviceList }
                        });
                        
-                       setSelectedCard({ ...selectedCard, devices: newDeviceList });
+                       if (selectedCard?.id === targetCard.id) {
+                          setSelectedCard({ ...targetCard, devices: newDeviceList });
+                       }
                        
                        toast.success(`המכשיר הוחלף בהצלחה ל-${newSerial}`);
                        setDeviceToReplace(null);
