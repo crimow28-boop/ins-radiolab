@@ -407,7 +407,8 @@ export default function Special() {
                              const { status } = getCardDeviceProgress(d, card.id);
                              return (
                                <div key={d} className={`flex-1 ${
-                                 status === 'completed' ? 'bg-emerald-500' : 
+                                 status === 'completed' ? 'bg-emerald-500' :
+                                 status === 'failed' ? 'bg-red-500' :
                                  status === 'draft' ? 'bg-blue-400' : 'bg-slate-200'
                                }`}></div>
                              )
