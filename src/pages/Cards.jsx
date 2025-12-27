@@ -8,25 +8,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, ArrowRight, Settings as SettingsIcon, Radio, CheckCircle, XCircle, Shield } from 'lucide-react';
+import { Plus, Edit, ArrowRight, Settings as SettingsIcon, CheckCircle, XCircle, Shield, Calendar, Star } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import { Badge } from '@/components/ui/badge';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import DeviceManager from '../components/DeviceManager';
 import { chunk } from 'lodash';
 import { toast } from 'sonner';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-export default function Routine() {
+export default function Cards() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [managerMode, setManagerMode] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [editingCard, setEditingCard] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [newCard, setNewCard] = useState({ title: '', description: '' });
+  const [newCard, setNewCard] = useState({ title: '', description: '', type: 'routine' });
   const [manageDevices, setManageDevices] = useState(null);
   const [pinCode, setPinCode] = useState('');
-  const [pinError, setPinError] = useState(false);
   const [deviceToReplace, setDeviceToReplace] = useState(null);
 
   const { data: user } = useQuery({
@@ -34,9 +33,14 @@ export default function Routine() {
     queryFn: () => base44.auth.me().catch(() => null),
   });
 
-  const { data: cards = [] } = useQuery({
+  const { data: routineCards = [] } = useQuery({
     queryKey: ['routineCards'],
     queryFn: () => base44.entities.RoutineCard.filter({ is_active: true }, 'order'),
+  });
+
+  const { data: specialCards = [] } = useQuery({
+    queryKey: ['specialCards'],
+    queryFn: () => base44.entities.SpecialCard.filter({ is_active: true }, 'order'),
   });
 
   const { data: devices = [] } = useQuery({
@@ -46,7 +50,7 @@ export default function Routine() {
   
   const { data: inspections = [] } = useQuery({
     queryKey: ['inspections_summary'],
-    queryFn: () => base44.entities.Inspection.list(), // We fetch all for simplicity, or filter by source if possible
+    queryFn: () => base44.entities.Inspection.list(),
   });
   
   const { data: pinSettings, refetch: refetchPin } = useQuery({
@@ -55,7 +59,7 @@ export default function Routine() {
        const res = await base44.entities.SystemSettings.filter({ key: 'manager_pin' });
        return res[0];
     },
-    enabled: !!(user?.role === 'admin') // Only fetch if admin/manager
+    enabled: !!(user?.role === 'admin')
   });
 
   const getCardDeviceProgress = (serial, cardId) => {
@@ -78,16 +82,25 @@ export default function Routine() {
      return { status: 'none', progress: 0 };
   };
 
-  const createMutation = useMutation({
+  const createRoutineMutation = useMutation({
     mutationFn: (data) => base44.entities.RoutineCard.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routineCards'] });
       setIsAddOpen(false);
-      setNewCard({ title: '', description: '' });
+      setNewCard({ title: '', description: '', type: 'routine' });
     },
   });
 
-  const updateMutation = useMutation({
+  const createSpecialMutation = useMutation({
+    mutationFn: (data) => base44.entities.SpecialCard.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['specialCards'] });
+      setIsAddOpen(false);
+      setNewCard({ title: '', description: '', type: 'routine' });
+    },
+  });
+
+  const updateRoutineMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.RoutineCard.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routineCards'] });
@@ -95,22 +108,47 @@ export default function Routine() {
     },
   });
 
+  const updateSpecialMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.SpecialCard.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['specialCards'] });
+      setEditingCard(null);
+    },
+  });
+
+  const handleCreateCard = () => {
+    const { type, ...cardData } = newCard;
+    if (type === 'routine') {
+      createRoutineMutation.mutate(cardData);
+    } else {
+      createSpecialMutation.mutate(cardData);
+    }
+  };
+
+  const handleUpdateCard = (card, data) => {
+    if (card.cardType === 'routine') {
+      updateRoutineMutation.mutate({ id: card.id, data });
+    } else {
+      updateSpecialMutation.mutate({ id: card.id, data });
+    }
+  };
+
   const handlePinSubmit = async () => {
-    // Verify PIN
     const res = await base44.entities.SystemSettings.filter({ key: 'manager_pin', value: pinCode });
     if (res.length > 0) {
-      // Correct PIN
       toast.success("אושר בהצלחה");
-      setPinError(false);
       
-      // Rotate PIN
       const newPin = Math.floor(1000 + Math.random() * 9000).toString();
       await base44.entities.SystemSettings.update(res[0].id, { value: newPin });
       
-      // Archive the card
       if (selectedCard) {
-        await base44.entities.RoutineCard.update(selectedCard.id, { is_active: false });
-        queryClient.invalidateQueries({ queryKey: ['routineCards'] });
+        if (selectedCard.cardType === 'routine') {
+          await base44.entities.RoutineCard.update(selectedCard.id, { is_active: false });
+          queryClient.invalidateQueries({ queryKey: ['routineCards'] });
+        } else {
+          await base44.entities.SpecialCard.update(selectedCard.id, { is_active: false });
+          queryClient.invalidateQueries({ queryKey: ['specialCards'] });
+        }
         setSelectedCard(null);
         toast.success("הכרטיס אושר והועבר להיסטוריה");
       }
@@ -118,10 +156,13 @@ export default function Routine() {
       refetchPin();
       setPinCode('');
     } else {
-      setPinError(true);
       toast.error("קוד שגוי");
     }
   };
+
+  // Combine cards with type indicator
+  const allRoutineCards = routineCards.map(c => ({ ...c, cardType: 'routine' }));
+  const allSpecialCards = specialCards.map(c => ({ ...c, cardType: 'special' }));
 
   if (selectedCard) {
     const cardDevices = selectedCard.devices || [];
@@ -143,9 +184,20 @@ export default function Routine() {
           </Button>
           
           <div className="mb-6">
-            <div className="mb-4">
-              <h2 className="text-3xl font-bold text-slate-800">{selectedCard.title}</h2>
-              <p className="text-slate-500 mt-1">{selectedCard.description}</p>
+            <div className="mb-4 flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                selectedCard.cardType === 'routine' ? 'bg-emerald-100' : 'bg-amber-100'
+              }`}>
+                {selectedCard.cardType === 'routine' ? (
+                  <Calendar className="w-5 h-5 text-emerald-600" />
+                ) : (
+                  <Star className="w-5 h-5 text-amber-600" />
+                )}
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-slate-800">{selectedCard.title}</h2>
+                <p className="text-slate-500 mt-1">{selectedCard.description}</p>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-4">
@@ -161,9 +213,9 @@ export default function Routine() {
                     onClick={() => {
                       if (!managerMode) {
                         if (isFailed) {
-                           setDeviceToReplace({ serial, cardId: selectedCard.id });
+                           setDeviceToReplace({ serial, cardId: selectedCard.id, cardType: selectedCard.cardType });
                         } else {
-                           navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=routine&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
+                           navigate(createPageUrl(`DeviceInspection?serial=${serial}&source=${selectedCard.cardType}&cardId=${selectedCard.id}&cardTitle=${encodeURIComponent(selectedCard.title)}`));
                         }
                       }
                     }}
@@ -215,7 +267,6 @@ export default function Routine() {
               </Button>
             </div>
 
-            {/* Manager Approval Section */}
             {allCompleted && (
                <div className="mt-12 p-6 bg-white border border-slate-400 max-w-md mx-auto text-center">
                  <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2">
@@ -250,26 +301,6 @@ export default function Routine() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {(selectedCard.sub_cards || []).map((sub, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.05 }}
-              >
-                <Card className="cursor-pointer hover:shadow-lg transition-all border-2 hover:border-blue-400">
-                  <CardContent className="p-6 text-center">
-                    <h3 className="font-semibold text-slate-800">{sub.title}</h3>
-                    {sub.status && (
-                      <p className="text-xs text-slate-500 mt-2">{sub.status}</p>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-
           {manageDevices && (
             <Dialog open={!!manageDevices} onOpenChange={() => setManageDevices(null)}>
               <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-4 sm:p-6" dir="rtl">
@@ -281,10 +312,7 @@ export default function Routine() {
                     devices={devices}
                     selectedDevices={manageDevices.devices || []}
                     onUpdate={(updatedDevices) => {
-                      updateMutation.mutate({ 
-                        id: manageDevices.id, 
-                        data: { devices: updatedDevices }
-                      });
+                      handleUpdateCard(manageDevices, { devices: updatedDevices });
                       setManageDevices(null);
                       if (selectedCard?.id === manageDevices.id) {
                         setSelectedCard({ ...manageDevices, devices: updatedDevices });
@@ -305,7 +333,6 @@ export default function Routine() {
                  </DialogHeader>
                  <div className="p-4 bg-amber-50 text-amber-800 rounded-lg mb-2 text-sm">
                     המכשיר הנוכחי נכשל בבדיקה. אנא בחר מכשיר חלופי מהרשימה.
-                    יש לבחור מכשיר אחד בלבד וללחוץ על "עדכן".
                  </div>
                  <div className="flex-1 overflow-hidden min-h-0 mt-2">
                    <DeviceManager
@@ -324,18 +351,11 @@ export default function Routine() {
                             return;
                          }
                          
-                         const targetCard = cards.find(c => c.id === deviceToReplace.cardId);
-                         if (!targetCard) return;
-                         
-                         const currentDevices = targetCard.devices || [];
+                         const currentDevices = selectedCard.devices || [];
                          const newDeviceList = currentDevices.map(d => d === deviceToReplace.serial ? newSerial : d);
                          
-                         updateMutation.mutate({
-                            id: targetCard.id,
-                            data: { devices: newDeviceList }
-                         });
-                         
-                         setSelectedCard({ ...targetCard, devices: newDeviceList });
+                         handleUpdateCard(selectedCard, { devices: newDeviceList });
+                         setSelectedCard({ ...selectedCard, devices: newDeviceList });
                          
                          toast.success(`המכשיר הוחלף בהצלחה ל-${newSerial}`);
                          setDeviceToReplace(null);
@@ -351,11 +371,80 @@ export default function Routine() {
     );
   }
 
+  const renderCardGrid = (cards, title, icon, bgColor) => (
+    <div className="mb-8">
+      <div className="flex items-center gap-2 mb-4">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${bgColor}`}>
+          {icon}
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">{title}</h2>
+        <span className="text-sm text-slate-500">({cards.length})</span>
+      </div>
+      
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((card, index) => (
+          <motion.div
+            key={card.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+          >
+            <div
+              className={`cursor-pointer bg-white border border-slate-400 h-40 relative group hover:bg-blue-50 transition-colors p-6 flex flex-col justify-center items-center text-center ${
+                managerMode ? 'border-amber-400 border-2' : ''
+              }`}
+              onClick={() => !managerMode && setSelectedCard(card)}
+            >
+                {managerMode && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 left-2 opacity-0 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingCard(card);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                )}
+                <h2 className="text-xl font-bold text-slate-800 mb-2">
+                  {card.title}
+                </h2>
+                <p className="text-slate-600 text-sm line-clamp-2">
+                  {card.description}
+                </p>
+
+                {card.devices?.length > 0 && (
+                  <div className="w-full mt-4 flex flex-col gap-1">
+                     {chunk(card.devices, 10).map((deviceChunk, idx) => (
+                       <div key={idx} className="flex gap-1 h-1.5 justify-center w-full">
+                         {deviceChunk.map(d => {
+                           const { status } = getCardDeviceProgress(d, card.id);
+                           return (
+                             <div key={d} className={`flex-1 ${
+                               status === 'completed' ? 'bg-emerald-500' :
+                               status === 'failed' ? 'bg-red-500' :
+                               status === 'draft' ? 'bg-blue-400' : 'bg-slate-200'
+                             }`}></div>
+                           )
+                         })}
+                       </div>
+                     ))}
+                  </div>
+                )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6" dir="rtl">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">שגרה</h1>
+          <h1 className="text-3xl font-bold text-slate-800">כרטיסי בדיקה</h1>
           <div className="flex gap-2">
             {user?.role === 'admin' && (
               <Button
@@ -380,6 +469,29 @@ export default function Routine() {
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
                     <div className="space-y-2">
+                      <Label>סוג כרטיס</Label>
+                      <RadioGroup 
+                        value={newCard.type} 
+                        onValueChange={(val) => setNewCard({ ...newCard, type: val })}
+                        className="flex gap-4"
+                      >
+                        <div className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 [&:has(:checked)]:bg-emerald-50 [&:has(:checked)]:border-emerald-300">
+                          <RadioGroupItem value="routine" id="routine" />
+                          <Label htmlFor="routine" className="cursor-pointer flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-emerald-600" />
+                            שגרה
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 [&:has(:checked)]:bg-amber-50 [&:has(:checked)]:border-amber-300">
+                          <RadioGroupItem value="special" id="special" />
+                          <Label htmlFor="special" className="cursor-pointer flex items-center gap-2">
+                            <Star className="w-4 h-4 text-amber-600" />
+                            מיוחד
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    <div className="space-y-2">
                       <Label>כותרת</Label>
                       <Input
                         value={newCard.title}
@@ -396,7 +508,7 @@ export default function Routine() {
                       />
                     </div>
                     <Button
-                      onClick={() => createMutation.mutate(newCard)}
+                      onClick={handleCreateCard}
                       disabled={!newCard.title}
                       className="w-full"
                     >
@@ -409,63 +521,19 @@ export default function Routine() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {cards.map((card, index) => (
-            <motion.div
-              key={card.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <div
-                className={`cursor-pointer bg-white border border-slate-400 h-40 relative group hover:bg-blue-50 transition-colors p-6 flex flex-col justify-center items-center text-center ${
-                  managerMode ? 'border-amber-400 border-2' : ''
-                }`}
-                onClick={() => !managerMode && setSelectedCard(card)}
-              >
-                  {managerMode && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 left-2 opacity-0 group-hover:opacity-100"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingCard(card);
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  )}
-                  <h2 className="text-xl font-bold text-slate-800 mb-2">
-                    {card.title}
-                  </h2>
-                  <p className="text-slate-600 text-sm line-clamp-2">
-                    {card.description}
-                  </p>
+        {renderCardGrid(
+          allRoutineCards, 
+          'שגרה', 
+          <Calendar className="w-4 h-4 text-emerald-600" />,
+          'bg-emerald-100'
+        )}
 
-                  {/* Summary Progress */}
-                  {card.devices?.length > 0 && (
-                    <div className="w-full mt-4 flex flex-col gap-1">
-                       {chunk(card.devices, 10).map((deviceChunk, idx) => (
-                         <div key={idx} className="flex gap-1 h-1.5 justify-center w-full">
-                           {deviceChunk.map(d => {
-                             const { status } = getCardDeviceProgress(d, card.id);
-                             return (
-                               <div key={d} className={`flex-1 ${
-                                 status === 'completed' ? 'bg-emerald-500' :
-                                 status === 'failed' ? 'bg-red-500' :
-                                 status === 'draft' ? 'bg-blue-400' : 'bg-slate-200'
-                               }`}></div>
-                             )
-                           })}
-                         </div>
-                       ))}
-                    </div>
-                  )}
-                  </div>
-                  </motion.div>
-                  ))}
-                  </div>
+        {renderCardGrid(
+          allSpecialCards, 
+          'מיוחד', 
+          <Star className="w-4 h-4 text-amber-600" />,
+          'bg-amber-100'
+        )}
 
         {editingCard && (
           <Dialog open={!!editingCard} onOpenChange={() => setEditingCard(null)}>
@@ -489,7 +557,7 @@ export default function Routine() {
                   />
                 </div>
                 <Button
-                  onClick={() => updateMutation.mutate({ id: editingCard.id, data: editingCard })}
+                  onClick={() => handleUpdateCard(editingCard, { title: editingCard.title, description: editingCard.description })}
                   className="w-full"
                 >
                   שמור שינויים
@@ -498,34 +566,6 @@ export default function Routine() {
             </DialogContent>
           </Dialog>
         )}
-
-        {manageDevices && (
-          <Dialog open={!!manageDevices} onOpenChange={() => setManageDevices(null)}>
-            <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-4 sm:p-6" dir="rtl">
-              <DialogHeader className="flex-shrink-0">
-                <DialogTitle>ניהול מכשירים - {manageDevices.title}</DialogTitle>
-              </DialogHeader>
-              <div className="flex-1 overflow-hidden min-h-0 mt-2">
-                <DeviceManager
-                devices={devices}
-                selectedDevices={manageDevices.devices || []}
-                onUpdate={(updatedDevices) => {
-                  updateMutation.mutate({ 
-                    id: manageDevices.id, 
-                    data: { devices: updatedDevices }
-                  });
-                  setManageDevices(null);
-                  if (selectedCard?.id === manageDevices.id) {
-                    setSelectedCard({ ...manageDevices, devices: updatedDevices });
-                  }
-                }}
-                onCancel={() => setManageDevices(null)}
-              />
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-
       </div>
     </div>
   );

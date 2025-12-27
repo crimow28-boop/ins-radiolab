@@ -12,8 +12,7 @@ export default function Layout({ children, currentPageName }) {
   });
 
   const navItems = [
-    { name: 'Special', label: 'מיוחד', icon: Star },
-    { name: 'Routine', label: 'שגרה', icon: Calendar },
+    { name: 'Cards', label: 'כרטיסים', icon: Radio },
     { name: 'Info', label: 'מידע', icon: Info },
     { name: 'Users', label: 'משתמשים', icon: Users, adminOnly: true },
   ];
