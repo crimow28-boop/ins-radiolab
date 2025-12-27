@@ -12,6 +12,7 @@ import { Plus, Edit, ArrowRight, Settings as SettingsIcon, CheckCircle, XCircle,
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import DeviceManager from '../components/DeviceManager';
+import CardExportDialog from '../components/cards/CardExportDialog';
 import { chunk } from 'lodash';
 import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -27,73 +28,7 @@ export default function Cards() {
   const [manageDevices, setManageDevices] = useState(null);
   const [pinCode, setPinCode] = useState('');
   const [deviceToReplace, setDeviceToReplace] = useState(null);
-
-  // Export helpers and action for current card
-  const EXPORT_HEADERS = ['סודר','שם','מספר צ’','אנטנה','מער״ש','צב\"ד','הצפנה','תדרים','בדיקות קשר','החלפת סוללה','אטימות','ציוד נוסף','הערות'];
-
-  const normalizeCheckbox = (val) => {
-    if (val === true) return true;
-    if (val === false) return false;
-    if (typeof val === 'string') {
-      if (['כן','true','TRUE','תקין','עבר','V','v'].includes(val)) return true;
-      if (['לא','false','FALSE','לא תקין','נכשל','X','x'].includes(val)) return false;
-    }
-    return undefined;
-  };
-  const toVX = (val) => (val === true ? 'V' : val === false ? 'X' : '');
-  const sanitize = (v) => (v == null ? '' : String(v).replaceAll('\n',' ').trim());
-  const toCsv = (rows) => {
-    const escape = (f) => {
-      const s = f == null ? '' : String(f);
-      return /[",\n]/.test(s) ? '"' + s.replaceAll('"','""') + '"' : s;
-    };
-    return rows.map(r => r.map(escape).join(',')).join('\n');
-  };
-
-  const handleExportCurrentCard = async () => {
-    const inspections = await base44.entities.Inspection.filter({ status: 'completed', card_id: selectedCard.id }, '-created_date', 1000);
-    const checklists = await base44.entities.InspectionChecklist.list();
-    const checklistByCode = new Map(checklists.map(c => [c.code, c]));
-
-    const rows = inspections.map((insp, idx) => {
-      let answers = {};
-      try { if (insp.checklist_answers) answers = JSON.parse(insp.checklist_answers); } catch {}
-      const checklist = checklistByCode.get(insp.profile);
-      const items = checklist?.items || [];
-      const idToLabel = new Map(items.map(it => [it.id, it.label]));
-      const getByLabel = (label) => {
-        for (const [id, lab] of idToLabel.entries()) if (lab === label) return answers[id];
-        for (const [id, lab] of idToLabel.entries()) if (lab?.includes?.(label)) return answers[id];
-        return undefined;
-      };
-
-      const num = idx + 1;
-      const name = getByLabel('שם') ?? insp.soldier_name ?? '';
-      const idCard = getByLabel('מספר צ’') ?? '';
-      const antenna = getByLabel('אנטנה') ?? '';
-      const mearash = getByLabel('מער\"ש') ?? getByLabel('מער״ש') ?? '';
-      const tzabadVal = getByLabel('צב\"ד');
-      const tzabad = typeof tzabadVal === 'string' ? (tzabadVal === 'עבר' ? 'V' : (tzabadVal ? 'X' : '')) : (tzabadVal === true ? 'V' : (tzabadVal === false ? 'X' : ''));
-      const encryption = normalizeCheckbox(getByLabel('הצפנ'));
-      const freqs = normalizeCheckbox(getByLabel('תדר'));
-      const comms = normalizeCheckbox(getByLabel('בדיקות קשר'));
-      const battery = normalizeCheckbox(getByLabel('החלפת סוללה'));
-      const sealing = normalizeCheckbox(getByLabel('אטימות'));
-      const extraEquip = getByLabel('ציוד נוסף') ?? '';
-      const notes = getByLabel('הערות') ?? (insp.remarks || '');
-
-      return [num, sanitize(name), sanitize(idCard), sanitize(antenna), sanitize(mearash), tzabad || '', toVX(encryption), toVX(freqs), toVX(comms), toVX(battery), toVX(sealing), sanitize(extraEquip), sanitize(notes)];
-    });
-
-    const csv = toCsv([EXPORT_HEADERS, ...rows]);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `export_card_${selectedCard.id}_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+const [exportOpen, setExportOpen] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['user'],
@@ -116,9 +51,14 @@ export default function Cards() {
   });
   
   const { data: inspections = [] } = useQuery({
-    queryKey: ['inspections_summary'],
-    queryFn: () => base44.entities.Inspection.list(),
-  });
+          queryKey: ['inspections_summary'],
+          queryFn: () => base44.entities.Inspection.list(),
+        });
+
+        const { data: checklists = [] } = useQuery({
+          queryKey: ['checklists'],
+          queryFn: () => base44.entities.InspectionChecklist.list(),
+        });
   
   const { data: pinSettings, refetch: refetchPin } = useQuery({
     queryKey: ['system_settings_pin'],
@@ -265,12 +205,10 @@ export default function Cards() {
                 <h2 className="text-3xl font-bold text-slate-800">{selectedCard.title}</h2>
                 <p className="text-slate-500 mt-1">{selectedCard.description}</p>
               </div>
-            </div>
-
-            <div className="flex justify-end mb-2">
-              <Button variant="secondary" onClick={handleExportCurrentCard} className="rounded-none">
+              <div className="mr-auto"></div>
+              <Button variant="outline" onClick={() => setExportOpen(true)} className="rounded-none">
                 <Download className="w-4 h-4 ml-2" />
-                ייצוא לטבלה (CSV)
+                ייצוא טבלה
               </Button>
             </div>
 
@@ -417,20 +355,20 @@ export default function Cards() {
                             toast.error("אנא בחר מכשיר אחד בלבד להחלפה");
                             return;
                          }
-                         
+
                          const newSerial = updatedDevices[0];
-                         
+
                          if (newSerial === deviceToReplace.serial) {
                             toast.error("אנא בחר מכשיר אחר");
                             return;
                          }
-                         
+
                          const currentDevices = selectedCard.devices || [];
                          const newDeviceList = currentDevices.map(d => d === deviceToReplace.serial ? newSerial : d);
-                         
+
                          handleUpdateCard(selectedCard, { devices: newDeviceList });
                          setSelectedCard({ ...selectedCard, devices: newDeviceList });
-                         
+
                          toast.success(`המכשיר הוחלף בהצלחה ל-${newSerial}`);
                          setDeviceToReplace(null);
                       }}
@@ -438,6 +376,17 @@ export default function Cards() {
                    />
                  </div>
                </DialogContent>
+            </Dialog>
+          )}
+
+          {exportOpen && (
+            <Dialog open={exportOpen} onOpenChange={setExportOpen}>
+              <DialogContent className="max-w-5xl p-4 sm:p-6" dir="rtl">
+                <DialogHeader>
+                  <DialogTitle>ייצוא טבלה - {selectedCard.title}</DialogTitle>
+                </DialogHeader>
+                <CardExportDialog card={selectedCard} inspections={inspections} checklists={checklists} />
+              </DialogContent>
             </Dialog>
           )}
         </div>
