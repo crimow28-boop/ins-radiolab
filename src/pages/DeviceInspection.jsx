@@ -390,7 +390,7 @@ export default function DeviceInspection() {
       });
 
       toast.success('הבדיקה נשמרה בהצלחה');
-      
+
       navigate(createPageUrl('Cards'));
 
     } catch (error) {
