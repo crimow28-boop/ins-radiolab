@@ -6,10 +6,9 @@ import { Download } from 'lucide-react';
 const HEADERS = [
   'סודר',
   'שם',
-  "מספר צ’",
   'אנטנה',
   'מער״ש',
-  'צב"ד',
+  'צב״ד',
   'הצפנה',
   'תדרים',
   'בדיקות קשר',
@@ -66,31 +65,32 @@ export default function CardExportDialog({ card, inspections = [], checklists = 
 
       const num = idx++;
       const name = getByLabel('שם') ?? insp.soldier_name ?? '';
-      const idCard = getByLabel("מספר צ’") ?? '';
       const antenna = getByLabel('אנטנה') ?? '';
       const mearash = getByLabel('מער"ש') ?? getByLabel('מער״ש') ?? '';
-      const tzabadVal = getByLabel('צב"ד');
-      const tzabad = typeof tzabadVal === 'string' ? (tzabadVal === 'עבר' ? 'V' : (tzabadVal ? 'X' : '')) : (tzabadVal === true ? 'V' : (tzabadVal === false ? 'X' : ''));
+      const tzabadRaw = getByLabel('צב"ד') ?? getByLabel('צב״ד');
+      const tzabad = (tzabadRaw === true || tzabadRaw === 'עבר' || tzabadRaw === 'תקין' || tzabadRaw === 'Pass')
+        ? 'עבר'
+        : (tzabadRaw === false || tzabadRaw === 'נכשל' ? 'נכשל' : '');
       const encryption = normalizeCheckbox(getByLabel('הצפנ'));
       const freqs = normalizeCheckbox(getByLabel('תדר'));
       const comms = normalizeCheckbox(getByLabel('בדיקות קשר'));
       const battery = normalizeCheckbox(getByLabel('החלפת סוללה'));
-      const sealing = normalizeCheckbox(getByLabel('אטימות'));
-      const extraEquip = getByLabel('ציוד נוסף') ?? '';
+      const sealing = sealingToStatus(getByLabel('אטימות'));
+      const extraEquipVal = getByLabel('ציוד נוסף') ?? '';
+      const extraEquip = Array.isArray(extraEquipVal) ? extraEquipVal.join(' • ') : extraEquipVal;
       const notes = getByLabel('הערות') ?? (insp.remarks || '');
 
       out.push([
         num,
         sanitize(name),
-        sanitize(idCard),
         sanitize(antenna),
         sanitize(mearash),
-        tzabad || '',
-        toVX(encryption),
-        toVX(freqs),
-        toVX(comms),
-        toVX(battery),
-        toVX(sealing),
+        tzabad,
+        checkboxToMark(encryption),
+        checkboxToMark(freqs),
+        checkboxToMark(comms),
+        checkboxToMark(battery),
+        sealing,
         sanitize(extraEquip),
         sanitize(notes)
       ]);
@@ -153,10 +153,17 @@ function normalizeCheckbox(val) {
   return undefined;
 }
 
-function toVX(val) {
-  if (val === true) return 'V';
-  if (val === false) return 'X';
+function checkboxToMark(val) {
+  if (val === true) return '✅';
+  if (val === false) return '❌';
   return '';
+}
+
+function sealingToStatus(val) {
+  if (val === undefined || val === null || val === '') return 'לא בוצע';
+  if (val === true || ['בוצע','עבר','תקין','כן','Pass','V','v'].includes(String(val))) return 'בוצע';
+  if (val === false || ['לא עבר','נכשל','X','x','לא תקין'].includes(String(val))) return 'לא עבר';
+  return String(val);
 }
 
 function sanitize(v) {
