@@ -109,33 +109,100 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
 
 
 
+  const hasValidBulk = bulkAnalysis.valid.length > 0;
+  const hasInvalidBulk = bulkAnalysis.invalid.length > 0;
+  const hasDuplicates = bulkAnalysis.duplicates.length > 0;
+  const hasConfusing = bulkAnalysis.confusing.length > 0;
+
   return (
     <div className="flex flex-col h-full overflow-hidden space-y-3">
       <div className="flex-shrink-0 space-y-3 bg-white pb-2 z-10">
-        {/* Bulk Input Bar */}
-        <div className="bg-amber-100 rounded-2xl p-3 border border-amber-200">
-          <p className="text-xs text-amber-800 mb-2 text-right font-medium">
+        {/* Quick Select Bar */}
+        <div className="bg-amber-100 rounded-2xl p-4 border border-amber-200">
+          <p className="text-sm text-amber-800 mb-3 text-right font-bold">
             # ניפוק וחיסול מכשירים
           </p>
-          <div className="flex gap-2">
+          
+          <div className="flex gap-2 mb-3">
             <Button
               type="button"
               size="sm"
               onClick={handleBulkAdd}
-              className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl px-4"
+              disabled={!hasValidBulk || hasDuplicates}
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 disabled:opacity-50"
             >
               <Plus className="w-4 h-4 ml-1" />
-              הוסף
+              הוסף {hasValidBulk ? `(${bulkAnalysis.valid.length})` : ''}
             </Button>
             <Input
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleBulkAdd()}
-              placeholder="הזן מספרים: 1 50 100 23-30 • תומך בטווחים ומספרים בודדים"
+              placeholder="הזן מספרים: 1 50 100 • טווחים: 10-15 • מופרדים ברווח או #"
               className="flex-1 h-9 rounded-xl border-amber-300 bg-white text-sm text-right"
               dir="ltr"
             />
           </div>
+
+          {/* Validation Feedback */}
+          {bulkInput.trim() && (
+            <div className="space-y-2 text-sm">
+              {/* Valid devices */}
+              {hasValidBulk && (
+                <div className="flex flex-wrap gap-1 items-center">
+                  <span className="text-emerald-700 font-medium flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    תקינים:
+                  </span>
+                  {bulkAnalysis.valid.map((v, i) => (
+                    <Badge key={i} className="bg-emerald-100 text-emerald-800 border-emerald-300">
+                      {v.serial}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Invalid devices */}
+              {hasInvalidBulk && (
+                <div className="flex flex-wrap gap-1 items-center">
+                  <span className="text-red-700 font-medium flex items-center gap-1">
+                    <XCircle className="w-3 h-3" />
+                    לא קיימים:
+                  </span>
+                  {bulkAnalysis.invalid.map((v, i) => (
+                    <Badge key={i} className="bg-red-100 text-red-800 border-red-300">
+                      {v.input}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Duplicates warning */}
+              {hasDuplicates && (
+                <div className="flex flex-wrap gap-1 items-center bg-orange-50 p-2 rounded-lg border border-orange-200">
+                  <span className="text-orange-700 font-medium flex items-center gap-1">
+                    <Copy className="w-3 h-3" />
+                    כפולים (הסר לפני הוספה):
+                  </span>
+                  {bulkAnalysis.duplicates.map((d, i) => (
+                    <Badge key={i} className="bg-orange-100 text-orange-800 border-orange-300">
+                      {d}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Confusing numbers warning */}
+              {hasConfusing && !hasDuplicates && (
+                <div className="flex items-center gap-2 bg-yellow-50 p-2 rounded-lg border border-yellow-200 text-yellow-800">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-xs">
+                    שים לב: מספרים {bulkAnalysis.confusing.join(', ')} עלולים להתבלבל (6↔9)
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="relative group">
@@ -144,12 +211,11 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="חפש לפי מספר סידורי או שם..."
-            className="h-14 pr-12 pl-4 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all text-base"
+            className="h-12 pr-12 pl-4 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all text-base"
           />
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-
           <Button
             type="button"
             variant="outline"
