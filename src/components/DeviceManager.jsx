@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Trash2, CheckCheck, X, Circle, Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { Search, X, Plus, CheckCircle, XCircle, AlertTriangle, Copy } from 'lucide-react';
 
 export default function DeviceManager({ devices, selectedDevices, onUpdate, onCancel }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,66 +24,87 @@ export default function DeviceManager({ devices, selectedDevices, onUpdate, onCa
     }
   };
 
-  const selectAllFiltered = () => {
-    const allFiltered = filteredDevices.map(d => d.serial_number);
-    const combined = [...new Set([...localSelected, ...allFiltered])];
-    setLocalSelected(combined);
-  };
-
   const clearAll = () => {
     setLocalSelected([]);
+    setBulkInput('');
   };
 
-  // Parse bulk input - supports ranges (e.g., "1-5") and individual numbers separated by spaces
-  const handleBulkAdd = () => {
-    if (!bulkInput.trim()) return;
+  // Parse bulk input and analyze results
+  const bulkAnalysis = useMemo(() => {
+    if (!bulkInput.trim()) {
+      return { valid: [], invalid: [], duplicates: [], confusing: [] };
+    }
     
     const allDeviceSerials = devices.map(d => d.serial_number);
-    const newSelections = [];
+    const deviceMap = new Map(devices.map(d => [d.serial_number, d]));
     
-    // Split by spaces, commas, or asterisks
-    const parts = bulkInput.split(/[\s,*]+/).filter(Boolean);
+    const parsedNumbers = [];
+    const parts = bulkInput.split(/[\s,*#]+/).filter(Boolean);
     
     parts.forEach(part => {
-      // Check if it's a range (e.g., "10-15" or "801000-801005")
       if (part.includes('-')) {
         const [start, end] = part.split('-').map(s => s.trim());
+        const startNum = parseInt(start);
+        const endNum = parseInt(end);
         
-        // Find devices that fall within this range
-        allDeviceSerials.forEach(serial => {
-          // Try numeric comparison if both are numbers
-          const serialNum = parseInt(serial);
-          const startNum = parseInt(start);
-          const endNum = parseInt(end);
-          
-          if (!isNaN(serialNum) && !isNaN(startNum) && !isNaN(endNum)) {
-            if (serialNum >= startNum && serialNum <= endNum) {
-              newSelections.push(serial);
-            }
-          } else {
-            // String comparison fallback
-            if (serial >= start && serial <= end) {
-              newSelections.push(serial);
-            }
+        if (!isNaN(startNum) && !isNaN(endNum)) {
+          for (let i = startNum; i <= endNum; i++) {
+            parsedNumbers.push(i.toString());
           }
-        });
+        }
       } else {
-        // Single value - find exact or partial match
-        const matchingDevices = allDeviceSerials.filter(serial => 
-          serial === part || serial.includes(part)
-        );
-        newSelections.push(...matchingDevices);
+        parsedNumbers.push(part);
       }
     });
     
-    if (newSelections.length > 0) {
-      const combined = [...new Set([...localSelected, ...newSelections])];
-      setLocalSelected(combined);
-      toast.success(`נוספו ${newSelections.length} מכשירים`);
-      setBulkInput('');
-    } else {
-      toast.error('לא נמצאו מכשירים תואמים');
-    }
+    const seen = new Set();
+    const duplicates = [];
+    const valid = [];
+    const invalid = [];
+    const confusing = [];
+    
+    parsedNumbers.forEach(num => {
+      // Check for duplicates
+      if (seen.has(num)) {
+        if (!duplicates.includes(num)) duplicates.push(num);
+        return;
+      }
+      seen.add(num);
+      
+      // Check for confusing numbers (6/9)
+      if (num.includes('6') || num.includes('9')) {
+        confusing.push(num);
+      }
+      
+      // Find matching device - exact match or ends with
+      const matchedSerial = allDeviceSerials.find(serial => 
+        serial === num || serial.endsWith(num)
+      );
+      
+      if (matchedSerial) {
+        const device = deviceMap.get(matchedSerial);
+        valid.push({
+          input: num,
+          serial: matchedSerial,
+          device,
+          status: device?.status || 'active'
+        });
+      } else {
+        invalid.push({ input: num, reason: 'לא קיים' });
+      }
+    });
+    
+    return { valid, invalid, duplicates, confusing };
+  }, [bulkInput, devices]);
+
+  // Add valid items from bulk analysis to selection
+  const handleBulkAdd = () => {
+    if (bulkAnalysis.valid.length === 0) return;
+    
+    const newSerials = bulkAnalysis.valid.map(v => v.serial);
+    const combined = [...new Set([...localSelected, ...newSerials])];
+    setLocalSelected(combined);
+    setBulkInput('');
   };
 
 
