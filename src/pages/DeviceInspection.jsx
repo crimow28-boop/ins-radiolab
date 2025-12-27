@@ -162,9 +162,7 @@ export default function DeviceInspection() {
       toast.success('טיוטה נשמרה');
       
       if (exit) {
-        if (source === 'special') navigate(createPageUrl('Special'));
-        else if (source === 'routine') navigate(createPageUrl('Routine'));
-        else navigate(createPageUrl('Home'));
+        navigate(createPageUrl('Cards'));
       }
     } catch (error) {
       console.error('Error saving draft:', error);
@@ -393,9 +391,7 @@ export default function DeviceInspection() {
 
       toast.success('הבדיקה נשמרה בהצלחה');
       
-      if (source === 'special') navigate(createPageUrl('Special'));
-      else if (source === 'routine') navigate(createPageUrl('Routine'));
-      else navigate(createPageUrl('Home'));
+      navigate(createPageUrl('Cards'));
 
     } catch (error) {
       console.error('Error saving inspection:', error);
