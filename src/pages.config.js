@@ -8,6 +8,7 @@ import InspectionHistory from './pages/InspectionHistory';
 import NewInspection from './pages/NewInspection';
 import Users from './pages/Users';
 import Cards from './pages/Cards';
+import ExportTable from './pages/ExportTable';
 import __Layout from './Layout.jsx';
 
 
@@ -22,6 +23,7 @@ export const PAGES = {
     "NewInspection": NewInspection,
     "Users": Users,
     "Cards": Cards,
+    "ExportTable": ExportTable,
 }
 
 export const pagesConfig = {
