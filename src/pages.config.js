@@ -9,6 +9,7 @@ import Info from './pages/Info';
 import InspectionHistory from './pages/InspectionHistory';
 import NewInspection from './pages/NewInspection';
 import Users from './pages/Users';
+import Admin from './pages/Admin';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "InspectionHistory": InspectionHistory,
     "NewInspection": NewInspection,
     "Users": Users,
+    "Admin": Admin,
 }
 
 export const pagesConfig = {

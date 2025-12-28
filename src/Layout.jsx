@@ -15,6 +15,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Cards', label: 'כרטיסים', icon: Radio },
     { name: 'Info', label: 'מידע', icon: Info },
     { name: 'Users', label: 'משתמשים', icon: Users, adminOnly: true },
+    { name: 'Admin', label: 'ניהול', icon: Users, adminOnly: true },
   ];
 
   const filteredNavItems = navItems.filter(item => !item.adminOnly || user?.role === 'admin');

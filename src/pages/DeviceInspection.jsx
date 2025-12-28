@@ -24,6 +24,7 @@ export default function DeviceInspection() {
   const source = searchParams.get('source'); // 'special' or 'routine'
   const cardId = searchParams.get('cardId');
   const cardTitle = searchParams.get('cardTitle');
+const soldierNameParam = searchParams.get('soldier');
   
   const [subtype, setSubtype] = useState('');
   const [checklistData, setChecklistData] = useState({});
@@ -137,7 +138,7 @@ export default function DeviceInspection() {
       
       const inspectionData = {
         device_serial_numbers: [device.serial_number],
-        soldier_name: user?.display_name || user?.full_name || 'Anonymous',
+        soldier_name: soldierNameParam || user?.display_name || user?.full_name || 'Anonymous',
         profile: currentChecklistType,
         inspection_date: new Date().toISOString(),
         status: 'draft',
@@ -360,7 +361,7 @@ export default function DeviceInspection() {
       const inspectionData = {
         inspection_number: existingDraft?.inspection_number || nextInspectionNumber,
         device_serial_numbers: [device.serial_number],
-        soldier_name: user?.display_name || user?.full_name || 'Anonymous',
+        soldier_name: soldierNameParam || user?.display_name || user?.full_name || 'Anonymous',
         profile: currentChecklistType,
         inspection_date: new Date().toISOString(),
         cavad_status: allPassed ? 'passed' : 'failed',
