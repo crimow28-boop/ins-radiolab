@@ -17,6 +17,8 @@ import CardExportDialog from '../components/cards/CardExportDialog';
 import { chunk } from 'lodash';
 import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/ui/switch';
 
 export default function Cards() {
   const navigate = useNavigate();
@@ -31,7 +33,7 @@ export default function Cards() {
   const [deviceToReplace, setDeviceToReplace] = useState(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [addDeviceOpen, setAddDeviceOpen] = useState(false);
-  const [newDevice, setNewDevice] = useState({ device_group: '713', serial_number: '' });
+  const [newDevice, setNewDevice] = useState({ device_group: '713', serial_number: '', device_name: '', has_amplifier: false, antenna_type: '', system_type: '' });
 
   const { data: user } = useQuery({
     queryKey: ['user'],
@@ -131,8 +133,7 @@ export default function Cards() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
       toast.success('המכשיר נוסף');
-      setAddDeviceOpen(false);
-      setNewDevice({ device_group: '713', serial_number: '' });
+            setNewDevice({ device_group: '713', serial_number: '', device_name: '', has_amplifier: false, antenna_type: '', system_type: '' });
     }
   });
 
@@ -433,13 +434,57 @@ export default function Cards() {
                   </div>
                   <div className="space-y-2">
                     <Label>מספר סידורי</Label>
-                    <Input value={newDevice.serial_number} onChange={(e) => setNewDevice({ ...newDevice, serial_number: e.target.value })} placeholder="לדוגמה: 12345" />
+                    <Input
+                      value={newDevice.serial_number}
+                      onChange={(e) => setNewDevice({ ...newDevice, serial_number: e.target.value })}
+                      placeholder="לדוגמה: 12345"
+                      autoFocus
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); } }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>שם מכשיר</Label>
+                    <Input
+                      value={newDevice.device_name}
+                      onChange={(e) => setNewDevice({ ...newDevice, device_name: e.target.value })}
+                      placeholder="למשל: 713/עמדה 3"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between border rounded-lg p-3">
+                    <Label className="m-0">מגבר</Label>
+                    <Switch
+                      checked={!!newDevice.has_amplifier}
+                      onCheckedChange={(val) => setNewDevice({ ...newDevice, has_amplifier: !!val })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>אנטנה (אופציונלי)</Label>
+                    <Input
+                      value={newDevice.antenna_type || ''}
+                      onChange={(e) => setNewDevice({ ...newDevice, antenna_type: e.target.value })}
+                      placeholder="סוג/הערה"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>מער״ש (אופציונלי)</Label>
+                    <Input
+                      value={newDevice.system_type || ''}
+                      onChange={(e) => setNewDevice({ ...newDevice, system_type: e.target.value })}
+                      placeholder="סוג/הערה"
+                    />
                   </div>
                   <Button
-                  onClick={() => createDeviceMutation.mutate({ serial_number: newDevice.serial_number.trim(), device_group: newDevice.device_group })}
-                  disabled={!newDevice.serial_number?.trim()}
-                  className="w-full">
-
+                    onClick={() => createDeviceMutation.mutate({
+                      serial_number: newDevice.serial_number.trim(),
+                      device_group: newDevice.device_group,
+                      device_name: newDevice.device_name?.trim() || undefined,
+                      has_amplifier: !!newDevice.has_amplifier,
+                      antenna_type: newDevice.antenna_type?.trim() || undefined,
+                      system_type: newDevice.system_type?.trim() || undefined
+                    })}
+                    disabled={!newDevice.serial_number?.trim() || !newDevice.device_name?.trim()}
+                    className="w-full"
+                  >
                     הוסף מכשיר
                   </Button>
                 </div>
