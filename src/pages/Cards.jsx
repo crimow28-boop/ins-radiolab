@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, ArrowRight, Settings as SettingsIcon, CheckCircle, XCircle, Shield, Calendar, Star, Download } from 'lucide-react';
 import { createPageUrl } from '@/utils';
@@ -29,6 +30,8 @@ export default function Cards() {
   const [pinCode, setPinCode] = useState('');
   const [deviceToReplace, setDeviceToReplace] = useState(null);
 const [exportOpen, setExportOpen] = useState(false);
+const [addDeviceOpen, setAddDeviceOpen] = useState(false);
+const [newDevice, setNewDevice] = useState({ device_group: '713', serial_number: '' });
 
   const { data: user } = useQuery({
     queryKey: ['user'],
@@ -120,6 +123,16 @@ const [exportOpen, setExportOpen] = useState(false);
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['specialCards'] });
       setEditingCard(null);
+    },
+  });
+
+  const createDeviceMutation = useMutation({
+    mutationFn: (data) => base44.entities.Device.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success('המכשיר נוסף');
+      setAddDeviceOpen(false);
+      setNewDevice({ device_group: '713', serial_number: '' });
     },
   });
 
@@ -388,8 +401,52 @@ const [exportOpen, setExportOpen] = useState(false);
                 <CardExportDialog card={selectedCard} inspections={inspections} checklists={checklists} />
               </DialogContent>
             </Dialog>
-          )}
-        </div>
+            )}
+            {user?.role === 'admin' && (
+            <Dialog open={addDeviceOpen} onOpenChange={setAddDeviceOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus className="w-4 h-4 ml-2" />
+                  מכשיר חדש
+                </Button>
+              </DialogTrigger>
+              <DialogContent dir="rtl">
+                <DialogHeader>
+                  <DialogTitle>מכשיר חדש</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label>סוג מכשיר</Label>
+                    <Select value={newDevice.device_group} onValueChange={(val) => setNewDevice({ ...newDevice, device_group: val })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="בחר סוג" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="713">713</SelectItem>
+                        <SelectItem value="710">710</SelectItem>
+                        <SelectItem value="711">711</SelectItem>
+                        <SelectItem value="hargol">hargol</SelectItem>
+                        <SelectItem value="elal">elal</SelectItem>
+                        <SelectItem value="lotus">lotus</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>מספר סידורי</Label>
+                    <Input value={newDevice.serial_number} onChange={(e)=> setNewDevice({ ...newDevice, serial_number: e.target.value })} placeholder="לדוגמה: 12345" />
+                  </div>
+                  <Button
+                    onClick={() => createDeviceMutation.mutate({ serial_number: newDevice.serial_number.trim(), device_group: newDevice.device_group })}
+                    disabled={!newDevice.serial_number?.trim()}
+                    className="w-full"
+                  >
+                    הוסף מכשיר
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            )}
+            </div>
       </div>
     );
   }
