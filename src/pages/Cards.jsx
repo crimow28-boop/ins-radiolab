@@ -18,7 +18,6 @@ import { chunk } from 'lodash';
 import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { Switch } from '@/components/ui/switch';
 
 export default function Cards() {
   const navigate = useNavigate();
