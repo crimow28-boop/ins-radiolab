@@ -1,0 +1,49 @@
+{
+  "name": "SpecialCard",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "\u05db\u05d5\u05ea\u05e8\u05ea \u05d4\u05db\u05e8\u05d8\u05d9\u05e1"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u05ea\u05d9\u05d0\u05d5\u05e8 \u05d7\u05d5\u05e4\u05e9\u05d9"
+    },
+    "order": {
+      "type": "number",
+      "description": "\u05e1\u05d3\u05e8 \u05ea\u05e6\u05d5\u05d2\u05d4",
+      "default": 0
+    },
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05de\u05e1\u05e4\u05e8\u05d9 \u05e1\u05d9\u05d3\u05d5\u05e8\u05d9 \u05e9\u05dc \u05de\u05db\u05e9\u05d9\u05e8\u05d9\u05dd \u05de\u05e9\u05d5\u05d9\u05db\u05d9\u05dd",
+      "default": []
+    },
+    "sub_cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "default": []
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

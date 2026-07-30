@@ -1,0 +1,44 @@
+{
+  "name": "Profile",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05e4\u05e8\u05d5\u05e4\u05d9\u05dc"
+    },
+    "code": {
+      "type": "string",
+      "enum": [
+        "710",
+        "711",
+        "713",
+        "hargol_4200",
+        "hargol_4400",
+        "elal",
+        "lotus"
+      ]
+    },
+    "device_groups": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05e7\u05d1\u05d5\u05e6\u05d5\u05ea \u05de\u05db\u05e9\u05d9\u05e8\u05d9\u05dd \u05d6\u05de\u05d9\u05e0\u05d5\u05ea"
+    },
+    "inspection_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05e7\u05d8\u05d2\u05d5\u05e8\u05d9\u05d5\u05ea \u05d1\u05d3\u05d9\u05e7\u05d4 \u05d6\u05de\u05d9\u05e0\u05d5\u05ea"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "code"
+  ]
+}

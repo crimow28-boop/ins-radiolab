@@ -1,0 +1,30 @@
+{
+  "name": "FaultHistory",
+  "type": "object",
+  "properties": {
+    "device_serial_number": {
+      "type": "string"
+    },
+    "inspection_id": {
+      "type": "string"
+    },
+    "fault_description": {
+      "type": "string"
+    },
+    "fault_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved": {
+      "type": "boolean",
+      "default": false
+    },
+    "resolution_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "device_serial_number",
+    "fault_description"
+  ]
+}
